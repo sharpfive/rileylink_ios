@@ -552,7 +552,7 @@ class PumpOpsSynchronous {
         
         let currentGlucosePage = try readCurrentGlucosePage()
         let startPage = Int(currentGlucosePage.pageNum)
-        let endPage = max(startPage - 1, 0)
+        let endPage = max(startPage - 1, -1)
         
         pages: for pageNum in stride(from: startPage, to: endPage, by: -1) {
             NSLog("Fetching page %d", pageNum)
