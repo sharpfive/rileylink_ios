@@ -334,6 +334,20 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		2F2440111E44F5460099DA7C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C12EA22F198B436800309FA4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C10D9BC01C8269D500378342;
+			remoteInfo = MinimedKit;
+		};
+		2F2440131E44F56D0099DA7C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C12EA22F198B436800309FA4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 430D64CA1CB855AB00FCA750;
+			remoteInfo = RileyLinkBLEKit;
+		};
 		430D64D61CB855AB00FCA750 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = C12EA22F198B436800309FA4 /* Project object */;
@@ -1708,6 +1722,8 @@
 			buildRules = (
 			);
 			dependencies = (
+				2F2440141E44F56D0099DA7C /* PBXTargetDependency */,
+				2F2440121E44F5460099DA7C /* PBXTargetDependency */,
 				43C246A51D891DB80031F8D1 /* PBXTargetDependency */,
 			);
 			name = NightscoutUploadKit;
@@ -1772,9 +1788,11 @@
 						LastSwiftMigration = 0800;
 					};
 					C12EA236198B436800309FA4 = {
+						DevelopmentTeam = Y29J3QU5XB;
 						LastSwiftMigration = 0800;
 					};
 					C12EA251198B436800309FA4 = {
+						DevelopmentTeam = Y29J3QU5XB;
 						TestTargetID = C12EA236198B436800309FA4;
 					};
 					C1B3830A1CD0665D00CE7782 = {
@@ -2255,6 +2273,16 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		2F2440121E44F5460099DA7C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C10D9BC01C8269D500378342 /* MinimedKit */;
+			targetProxy = 2F2440111E44F5460099DA7C /* PBXContainerItemProxy */;
+		};
+		2F2440141E44F56D0099DA7C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 430D64CA1CB855AB00FCA750 /* RileyLinkBLEKit */;
+			targetProxy = 2F2440131E44F56D0099DA7C /* PBXContainerItemProxy */;
+		};
 		430D64D71CB855AB00FCA750 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 430D64CA1CB855AB00FCA750 /* RileyLinkBLEKit */;
@@ -2772,10 +2800,10 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = Y29J3QU5XB;
 				INFOPLIST_FILE = "RileyLink/RileyLink-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.rileylink.rlapp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sharpfive.rileylink.rlapp;
 				PRODUCT_NAME = RileyLink;
 				PROVISIONING_PROFILE = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "RileyLink/RileyLink-Bridging-Header.h";
@@ -2793,10 +2821,10 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = Y29J3QU5XB;
 				INFOPLIST_FILE = "RileyLink/RileyLink-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.rileylink.rlapp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sharpfive.rileylink.rlapp;
 				PRODUCT_NAME = RileyLink;
 				PROVISIONING_PROFILE = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "RileyLink/RileyLink-Bridging-Header.h";
@@ -2811,7 +2839,7 @@
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/RileyLink.app/RileyLink";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = Y29J3QU5XB;
 				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
 				INFOPLIST_FILE = "RileyLinkTests/RileyLinkTests-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
@@ -2829,7 +2857,7 @@
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/RileyLink.app/RileyLink";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = Y29J3QU5XB;
 				INFOPLIST_FILE = "RileyLinkTests/RileyLinkTests-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.rileylink.${PRODUCT_NAME:rfc1034identifier}";
