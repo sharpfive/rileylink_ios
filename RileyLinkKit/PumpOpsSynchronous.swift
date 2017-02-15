@@ -61,6 +61,10 @@ class PageHistoryCache : PageHistoryCacheable {
     func readFromCache(pageNumber: UInt) throws -> Data? {
         let url = URLForPageNumber(pageNumber)
         
+        if pageExists(pageNumber: pageNumber) == false {
+            return nil
+        }
+        
         let data = try Data(contentsOf: url)
 
         return data
