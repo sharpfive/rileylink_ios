@@ -26,6 +26,53 @@ public enum RXFilterMode: UInt8 {
     case narrow = 0x90  // 150KHz
 }
 
+protocol PageHistoryCacheable {
+    func pageExists(pageNumber: UInt) -> Bool
+    func cache(pageNumber: UInt, data: Data) throws
+    func readFromCache(pageNumber:UInt) throws -> Data?
+}
+
+class PageHistoryCache : PageHistoryCacheable {
+    
+    // This class is not thread safe. Beware!
+    
+    var documentsURL: URL {
+        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        let documentsDirectory = paths[0]
+        return documentsDirectory
+    }
+    
+    var fileManager: FileManager {
+        return FileManager.default
+    }
+    
+    func pageExists(pageNumber: UInt) -> Bool {
+        let url = URLForPageNumber(pageNumber)
+        
+        return fileManager.fileExists(atPath: url.absoluteString)
+    }
+    
+    func cache(pageNumber: UInt, data: Data) throws {
+        let url = URLForPageNumber(pageNumber)
+        
+        try data.write(to: url)
+    }
+    
+    func readFromCache(pageNumber: UInt) throws -> Data? {
+        let url = URLForPageNumber(pageNumber)
+        
+        let data = try Data(contentsOf: url)
+
+        return data
+    }
+    
+    private func URLForPageNumber(_ pageNumber: UInt) -> URL {
+        let documentURL = documentsURL
+        let pageDataURL = documentURL.appendingPathComponent("page-\(pageNumber).data")
+        return pageDataURL
+    }
+}
+
 class PumpOpsSynchronous {
     
     private static let standardPumpResponseWindow: UInt16 = 180
@@ -36,6 +83,8 @@ class PumpOpsSynchronous {
     
     let pump: PumpState
     let session: RileyLinkCmdSession
+    
+    var pageHistoryCache: PageHistoryCacheable? = PageHistoryCache()
     
     init(pumpState: PumpState, session: RileyLinkCmdSession) {
         self.pump = pumpState
@@ -459,7 +508,19 @@ class PumpOpsSynchronous {
             let pageData: Data
 
             do {
-                pageData = try getHistoryPage(pageNum)
+                let uintPageNum = UInt(pageNum)
+                
+                if let pageHistoryCache = pageHistoryCache {
+                    
+                    if let data = try pageHistoryCache.readFromCache(pageNumber: uintPageNum) {
+                        pageData = data
+                    } else {
+                        pageData = try getHistoryPage(pageNum)
+                    }
+                } else {
+                    pageData = try getHistoryPage(pageNum)
+                }
+                
             } catch let error as PumpCommsError {
                 if case .unexpectedResponse(let response, from: _) = error, response.messageType == .emptyHistoryPage {
                     break pages
@@ -508,7 +569,13 @@ class PumpOpsSynchronous {
 
                 lastEvent = event
             }
+            
+            // cache the HistoryPage
+            if let pageHistoryCache = pageHistoryCache {
+                try pageHistoryCache.cache(pageNumber: UInt(pageNum), data: pageData)
+            }
         }
+        NSLog("Returning %d events", events.count)
         return (events, pumpModel)
     }
     
