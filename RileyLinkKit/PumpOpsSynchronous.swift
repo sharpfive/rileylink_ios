@@ -526,8 +526,13 @@ class PumpOpsSynchronous {
         var seenEventData = Set<Data>()
         var lastEvent: PumpEvent?
         
+        //pageHistoryCache?.clearCache()
+        
+        let startCacheTime = Date()
+        
         pages: for pageNum in 0..<16 {
             NSLog("Fetching page %d", pageNum)
+            let startPageFetch = Date()
             let pageData: Data
 
             do {
