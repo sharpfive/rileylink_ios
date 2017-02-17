@@ -49,7 +49,7 @@ class PageHistoryCache : PageHistoryCacheable {
     func pageExists(pageNumber: UInt) -> Bool {
         let url = URLForPageNumber(pageNumber)
         
-        return fileManager.fileExists(atPath: url.absoluteString)
+        return fileManager.fileExists(atPath: url.path)
     }
     
     func cache(pageNumber: UInt, data: Data) throws {
@@ -68,6 +68,25 @@ class PageHistoryCache : PageHistoryCacheable {
         let data = try Data(contentsOf: url)
 
         return data
+    }
+    
+    func clearCache() -> Void {
+        
+        for pageNumber in 0..<16 {
+            let uintPageNumber = UInt(pageNumber)
+            
+            
+            if pageExists(pageNumber: uintPageNumber) {
+                
+                let url = URLForPageNumber(uintPageNumber)
+                do {
+                    try fileManager.removeItem(at: url)
+                } catch {
+                    
+                }
+            }
+            
+        }
     }
     
     private func URLForPageNumber(_ pageNumber: UInt) -> URL {
