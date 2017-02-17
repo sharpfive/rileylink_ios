@@ -552,6 +552,10 @@ class PumpOpsSynchronous {
                 }
             }
             
+            NSLog("Done Fetching Page %d", pageNum)
+            let pageFetchTimeInterval = Date().timeIntervalSince(startPageFetch)
+            NSLog("Done Fetching Page timeElapsed \(pageFetchTimeInterval)")
+    
             var idx = 0
             let chunkSize = 256;
             while idx < pageData.count {
@@ -599,6 +603,9 @@ class PumpOpsSynchronous {
             }
         }
         NSLog("Returning %d events", events.count)
+        let timeElapsed = Date().timeIntervalSince(startCacheTime)
+        let timeElaspedString = "timeElapsed = \(timeElapsed)"
+        NSLog(timeElaspedString)
         return (events, pumpModel)
     }
     
