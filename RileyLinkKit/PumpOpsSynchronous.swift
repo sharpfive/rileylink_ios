@@ -26,6 +26,126 @@ public enum RXFilterMode: UInt8 {
     case narrow = 0x90  // 150KHz
 }
 
+protocol PageHistoryCacheable {
+    func getNumberOfPages() -> Int
+    func saveNumberOfPages(_ numberOfPages: Int) throws -> Void
+    
+    func pageExists(pageNumber: UInt) -> Bool
+    func cache(pageNumber: UInt, data: Data) throws
+    func readFromCache(pageNumber:UInt) throws -> Data?
+}
+
+class PageHistoryCache : PageHistoryCacheable {
+    
+    // This class is not thread safe. Beware!
+    private let NumberOfPagesKey: String = "number_of_pages"
+    
+    var documentsURL: URL {
+        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        let documentsDirectory = paths[0]
+        return documentsDirectory
+    }
+    
+    var fileManager: FileManager {
+        return FileManager.default
+    }
+    
+    func pageExists(pageNumber: UInt) -> Bool {
+        let url = URLForPageNumber(pageNumber)
+        
+        return fileManager.fileExists(atPath: url.path)
+    }
+    
+    func cache(pageNumber: UInt, data: Data) throws {
+        let url = URLForPageNumber(pageNumber)
+        
+        try data.write(to: url)
+    }
+    
+    func readFromCache(pageNumber: UInt) throws -> Data? {
+        let url = URLForPageNumber(pageNumber)
+        
+        if pageExists(pageNumber: pageNumber) == false {
+            return nil
+        }
+        
+        let data = try Data(contentsOf: url)
+
+        return data
+    }
+    
+    func getNumberOfPages() -> Int {
+        if let cacheMetaData = cacheMetaData {
+            return cacheMetaData.numberOfPages
+        }
+        
+        return 0
+    }
+    
+    func saveNumberOfPages(_ numberOfPages: Int) throws {
+        
+        clearCache()
+        
+        let cacheMetaData: [String: Any] = [NumberOfPagesKey: numberOfPages]
+        
+        let data = try JSONSerialization.data(withJSONObject: cacheMetaData, options: [])
+        
+        try data.write(to: URLForMetaData())
+    }
+    
+    func clearCache() -> Void {
+        
+        for pageNumber in 0..<16 {
+            let uintPageNumber = UInt(pageNumber)
+            
+            if pageExists(pageNumber: uintPageNumber) {
+                
+                let url = URLForPageNumber(uintPageNumber)
+                do {
+                    try fileManager.removeItem(at: url)
+                } catch {
+                    
+                }
+            }
+        }
+    }
+    
+    private func URLForPageNumber(_ pageNumber: UInt) -> URL {
+        let documentURL = documentsURL
+        let pageDataURL = documentURL.appendingPathComponent("page-\(pageNumber).data")
+        return pageDataURL
+    }
+    
+    private func URLForMetaData() -> URL {
+        let documentURL = documentsURL
+        let metaDataURL = documentURL.appendingPathComponent("page-metadata.data")
+        return metaDataURL
+    }
+    
+    var cacheMetaData: CacheMetaData? {
+        
+        let data: Data
+        
+        do {
+            data = try Data(contentsOf: URLForMetaData())
+            
+            if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: AnyObject],
+                let numberOfPages = json[NumberOfPagesKey] as? Int {
+                return CacheMetaData(numberOfPages: numberOfPages)
+            }
+            
+        } catch {
+            return nil
+        }
+    
+        return nil
+    }
+    
+    struct CacheMetaData {
+        let numberOfPages: Int
+    }
+}
+
 class PumpOpsSynchronous {
     
     private static let standardPumpResponseWindow: UInt16 = 180
@@ -36,6 +156,8 @@ class PumpOpsSynchronous {
     
     let pump: PumpState
     let session: RileyLinkCmdSession
+    
+    var pageHistoryCache: PageHistoryCache? = PageHistoryCache()
     
     init(pumpState: PumpState, session: RileyLinkCmdSession) {
         self.pump = pumpState
@@ -180,9 +302,16 @@ class PumpOpsSynchronous {
         let shortMsg = makePumpMessage(to: msg.messageType)
         let shortResponse = try sendAndListen(shortMsg)
         
-        guard shortResponse.messageType == .pumpAck else {
+        
+        if responseMessageType == shortResponse.messageType {
+            return shortResponse
+        } else if shortResponse.messageType != .pumpAck {
             throw PumpCommsError.unexpectedResponse(shortResponse, from: shortMsg)
         }
+        
+//        guard shortResponse.messageType == .pumpAck else {
+//            throw PumpCommsError.unexpectedResponse(shortResponse, from: shortMsg)
+//        }
         
         let response = try sendAndListen(msg)
         
@@ -196,6 +325,11 @@ class PumpOpsSynchronous {
     internal func getPumpModelNumber() throws -> String {
         let body: GetPumpModelCarelinkMessageBody = try messageBody(to: .getPumpModel)
         return body.model
+    }
+    
+    internal func getNumberOfEventPages() throws -> Int {
+        let body: ReadCurrentPageNumberMessageBody = try messageBody(to: .readCurrentPageNumber)
+        return body.pageNum
     }
     
     internal func getPumpModel() throws -> PumpModel {
@@ -454,12 +588,39 @@ class PumpOpsSynchronous {
         var seenEventData = Set<Data>()
         var lastEvent: PumpEvent?
         
+        
+        if let pageHistoryCache = pageHistoryCache {
+            let previousNumberOfEventPages = pageHistoryCache.getNumberOfPages()
+            let numberOfEventPages = try getNumberOfEventPages()
+        
+            if previousNumberOfEventPages == 0 {
+                try pageHistoryCache.saveNumberOfPages(numberOfEventPages)
+            } else if numberOfEventPages != previousNumberOfEventPages {
+                try pageHistoryCache.saveNumberOfPages(numberOfEventPages)
+            }
+        }
+        
+        let startCacheTime = Date()
+        
         pages: for pageNum in 0..<16 {
             NSLog("Fetching page %d", pageNum)
+            let startPageFetch = Date()
             let pageData: Data
 
             do {
-                pageData = try getHistoryPage(pageNum)
+                let uintPageNum = UInt(pageNum)
+                
+                if let pageHistoryCache = pageHistoryCache, pageNum > 0 {
+                    
+                    if let data = try pageHistoryCache.readFromCache(pageNumber: uintPageNum) {
+                        pageData = data
+                    } else {
+                        pageData = try getHistoryPage(pageNum)
+                    }
+                } else {
+                    pageData = try getHistoryPage(pageNum)
+                }
+                
             } catch let error as PumpCommsError {
                 if case .unexpectedResponse(let response, from: _) = error, response.messageType == .emptyHistoryPage {
                     break pages
@@ -468,6 +629,10 @@ class PumpOpsSynchronous {
                 }
             }
             
+            NSLog("Done Fetching Page %d", pageNum)
+            let pageFetchTimeInterval = Date().timeIntervalSince(startPageFetch)
+            NSLog("Done Fetching Page timeElapsed \(pageFetchTimeInterval)")
+    
             var idx = 0
             let chunkSize = 256;
             while idx < pageData.count {
@@ -487,18 +652,19 @@ class PumpOpsSynchronous {
                     timestamp.timeZone = pump.timeZone
 
                     if let date = timestamp.date?.addingTimeInterval(timeAdjustmentInterval) {
-                        if date.timeIntervalSince(startDate) < -eventTimestampDeltaAllowance {
-                            NSLog("Found event at (%@) to be more than %@s before startDate(%@)", date as NSDate, String(describing: eventTimestampDeltaAllowance), startDate as NSDate);
-                            break pages
-                        } else if date.timeIntervalSince(timeCursor) > eventTimestampDeltaAllowance {
-                            NSLog("Found event (%@) out of order in history. Ending history fetch.", date as NSDate)
-                            break pages
-                        } else {
+                        // aiai commented out to get more records
+//                        if date.timeIntervalSince(startDate) < -eventTimestampDeltaAllowance {
+//                            NSLog("Found event at (%@) to be more than %@s before startDate(%@)", date as NSDate, String(describing: eventTimestampDeltaAllowance), startDate as NSDate);
+//                            //break pages
+//                        } else if date.timeIntervalSince(timeCursor) > eventTimestampDeltaAllowance {
+//                            NSLog("Found event (%@) out of order in history. Ending history fetch.", date as NSDate)
+//                            break pages
+//                        } else {
                             if (date.compare(startDate) != .orderedAscending) {
                                 timeCursor = date
                             }
                             events.insert(TimestampedHistoryEvent(pumpEvent: event, date: date), at: 0)
-                        }
+//                        }
                     }
                 }
 
@@ -508,7 +674,16 @@ class PumpOpsSynchronous {
 
                 lastEvent = event
             }
+            
+            // cache the HistoryPage
+            if let pageHistoryCache = pageHistoryCache {
+                try pageHistoryCache.cache(pageNumber: UInt(pageNum), data: pageData)
+            }
         }
+        NSLog("Returning %d events", events.count)
+        let timeElapsed = Date().timeIntervalSince(startCacheTime)
+        let timeElaspedString = "timeElapsed = \(timeElapsed)"
+        NSLog(timeElaspedString)
         return (events, pumpModel)
     }
     
