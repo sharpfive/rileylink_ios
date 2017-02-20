@@ -83,6 +83,9 @@ class PageHistoryCache : PageHistoryCacheable {
     }
     
     func saveNumberOfPages(_ numberOfPages: Int) throws {
+        
+        clearCache()
+        
         let cacheMetaData: [String: Any] = [NumberOfPagesKey: numberOfPages]
         
         let data = try JSONSerialization.data(withJSONObject: cacheMetaData, options: [])
@@ -154,7 +157,7 @@ class PumpOpsSynchronous {
     let pump: PumpState
     let session: RileyLinkCmdSession
     
-    var pageHistoryCache: PageHistoryCacheable? = PageHistoryCache()
+    var pageHistoryCache: PageHistoryCache? = PageHistoryCache()
     
     init(pumpState: PumpState, session: RileyLinkCmdSession) {
         self.pump = pumpState
@@ -585,24 +588,17 @@ class PumpOpsSynchronous {
         var seenEventData = Set<Data>()
         var lastEvent: PumpEvent?
         
-        let numberOfEventPages = try getNumberOfEventPages()
         
-//        let asdfData = Data(bytes:[3])
-//        
-//        if let messageBody = ReadCurrentPageNumberMessageBody(rxData: asdfData) {
-//            let readPageNumberMessage = makePumpMessage(to: .readCurrentPageNumber, using: messageBody)
-//            
-//            let firstResponse = try runCommandWithArguments(readPageNumberMessage, responseMessageType: .readCurrentPageNumber)
-//            
-//            if let readCurrentPageNumberResponse = firstResponse.messageBody as? ReadCurrentPageNumberMessageBody {
-//            
-//                let pageNum = readCurrentPageNumberResponse.pageNum
-//                
-//                
-//            }
-//            
-//            NSLog("\(firstResponse)")
-//        }
+        if let pageHistoryCache = pageHistoryCache {
+            let previousNumberOfEventPages = pageHistoryCache.getNumberOfPages()
+            let numberOfEventPages = try getNumberOfEventPages()
+        
+            if previousNumberOfEventPages == 0 {
+                try pageHistoryCache.saveNumberOfPages(numberOfEventPages)
+            } else if numberOfEventPages != previousNumberOfEventPages {
+                try pageHistoryCache.saveNumberOfPages(numberOfEventPages)
+            }
+        }
         
         let startCacheTime = Date()
         
@@ -656,6 +652,7 @@ class PumpOpsSynchronous {
                     timestamp.timeZone = pump.timeZone
 
                     if let date = timestamp.date?.addingTimeInterval(timeAdjustmentInterval) {
+                        // aiai commented out to get more records
 //                        if date.timeIntervalSince(startDate) < -eventTimestampDeltaAllowance {
 //                            NSLog("Found event at (%@) to be more than %@s before startDate(%@)", date as NSDate, String(describing: eventTimestampDeltaAllowance), startDate as NSDate);
 //                            //break pages
