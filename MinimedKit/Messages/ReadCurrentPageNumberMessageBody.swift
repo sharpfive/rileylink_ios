@@ -8,15 +8,35 @@
 
 import Foundation
 
-class ReadCurrentPageNumberMessageBody : MessageBody {
-    static var length: Int = 30
+public class ReadCurrentPageNumberMessageBody : MessageBody {
+    public static var length: Int = 64
+    public let pageNum: Int
 
+    let rxData: Data
     
+    public var txData: Data {
+        return rxData
+    }
+ 
     public required init?(rxData: Data) {
-        return nil
+        
+        var page = 0
+        
+        if rxData.count > 1 {
+            page = Int(rxData[0])
+        }// else if rxData.count > 3 {
+//            page = Int(bigEndianBytes: rxData.subdata(in: 0..<4))
+//        }
+        
+        if page < 0 || page > 36 {
+            page = 36
+        }
+        
+        pageNum = page
+        self.rxData = rxData
     }
     
-    var txData: Data {
-        return Data()
-    }
+//    public var txData: Data {
+//        return Data()
+//    }
 }

@@ -27,6 +27,9 @@ public enum RXFilterMode: UInt8 {
 }
 
 protocol PageHistoryCacheable {
+    func getNumberOfPages() -> Int
+    func saveNumberOfPages(_ numberOfPages: Int) throws -> Void
+    
     func pageExists(pageNumber: UInt) -> Bool
     func cache(pageNumber: UInt, data: Data) throws
     func readFromCache(pageNumber:UInt) throws -> Data?
@@ -35,6 +38,7 @@ protocol PageHistoryCacheable {
 class PageHistoryCache : PageHistoryCacheable {
     
     // This class is not thread safe. Beware!
+    private let NumberOfPagesKey: String = "number_of_pages"
     
     var documentsURL: URL {
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
@@ -70,11 +74,26 @@ class PageHistoryCache : PageHistoryCacheable {
         return data
     }
     
+    func getNumberOfPages() -> Int {
+        if let cacheMetaData = cacheMetaData {
+            return cacheMetaData.numberOfPages
+        }
+        
+        return 0
+    }
+    
+    func saveNumberOfPages(_ numberOfPages: Int) throws {
+        let cacheMetaData: [String: Any] = [NumberOfPagesKey: numberOfPages]
+        
+        let data = try JSONSerialization.data(withJSONObject: cacheMetaData, options: [])
+        
+        try data.write(to: URLForMetaData())
+    }
+    
     func clearCache() -> Void {
         
         for pageNumber in 0..<16 {
             let uintPageNumber = UInt(pageNumber)
-            
             
             if pageExists(pageNumber: uintPageNumber) {
                 
@@ -85,7 +104,6 @@ class PageHistoryCache : PageHistoryCacheable {
                     
                 }
             }
-            
         }
     }
     
@@ -93,6 +111,35 @@ class PageHistoryCache : PageHistoryCacheable {
         let documentURL = documentsURL
         let pageDataURL = documentURL.appendingPathComponent("page-\(pageNumber).data")
         return pageDataURL
+    }
+    
+    private func URLForMetaData() -> URL {
+        let documentURL = documentsURL
+        let metaDataURL = documentURL.appendingPathComponent("page-metadata.data")
+        return metaDataURL
+    }
+    
+    var cacheMetaData: CacheMetaData? {
+        
+        let data: Data
+        
+        do {
+            data = try Data(contentsOf: URLForMetaData())
+            
+            if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: AnyObject],
+                let numberOfPages = json[NumberOfPagesKey] as? Int {
+                return CacheMetaData(numberOfPages: numberOfPages)
+            }
+            
+        } catch {
+            return nil
+        }
+    
+        return nil
+    }
+    
+    struct CacheMetaData {
+        let numberOfPages: Int
     }
 }
 
@@ -252,9 +299,16 @@ class PumpOpsSynchronous {
         let shortMsg = makePumpMessage(to: msg.messageType)
         let shortResponse = try sendAndListen(shortMsg)
         
-        guard shortResponse.messageType == .pumpAck else {
+        
+        if responseMessageType == shortResponse.messageType {
+            return shortResponse
+        } else if shortResponse.messageType != .pumpAck {
             throw PumpCommsError.unexpectedResponse(shortResponse, from: shortMsg)
         }
+        
+//        guard shortResponse.messageType == .pumpAck else {
+//            throw PumpCommsError.unexpectedResponse(shortResponse, from: shortMsg)
+//        }
         
         let response = try sendAndListen(msg)
         
@@ -268,6 +322,11 @@ class PumpOpsSynchronous {
     internal func getPumpModelNumber() throws -> String {
         let body: GetPumpModelCarelinkMessageBody = try messageBody(to: .getPumpModel)
         return body.model
+    }
+    
+    internal func getNumberOfEventPages() throws -> Int {
+        let body: ReadCurrentPageNumberMessageBody = try messageBody(to: .readCurrentPageNumber)
+        return body.pageNum
     }
     
     internal func getPumpModel() throws -> PumpModel {
@@ -526,11 +585,24 @@ class PumpOpsSynchronous {
         var seenEventData = Set<Data>()
         var lastEvent: PumpEvent?
         
-        let asdfData = Data()
+        let numberOfEventPages = try getNumberOfEventPages()
         
-        if let messageBody = ReadCurrentGlucosePageMessageBody(rxData: asdfData) {
-            let readPageNumberMessage = makePumpMessage(to: .readCurrentPageNumber, using: messageBody)
-        }
+//        let asdfData = Data(bytes:[3])
+//        
+//        if let messageBody = ReadCurrentPageNumberMessageBody(rxData: asdfData) {
+//            let readPageNumberMessage = makePumpMessage(to: .readCurrentPageNumber, using: messageBody)
+//            
+//            let firstResponse = try runCommandWithArguments(readPageNumberMessage, responseMessageType: .readCurrentPageNumber)
+//            
+//            if let readCurrentPageNumberResponse = firstResponse.messageBody as? ReadCurrentPageNumberMessageBody {
+//            
+//                let pageNum = readCurrentPageNumberResponse.pageNum
+//                
+//                
+//            }
+//            
+//            NSLog("\(firstResponse)")
+//        }
         
         let startCacheTime = Date()
         
