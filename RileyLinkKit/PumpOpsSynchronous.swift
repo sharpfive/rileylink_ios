@@ -526,7 +526,11 @@ class PumpOpsSynchronous {
         var seenEventData = Set<Data>()
         var lastEvent: PumpEvent?
         
-        //pageHistoryCache?.clearCache()
+        let asdfData = Data()
+        
+        if let messageBody = ReadCurrentGlucosePageMessageBody(rxData: asdfData) {
+            let readPageNumberMessage = makePumpMessage(to: .readCurrentPageNumber, using: messageBody)
+        }
         
         let startCacheTime = Date()
         
@@ -538,7 +542,7 @@ class PumpOpsSynchronous {
             do {
                 let uintPageNum = UInt(pageNum)
                 
-                if let pageHistoryCache = pageHistoryCache where pageNum > 0 {
+                if let pageHistoryCache = pageHistoryCache, pageNum > 0 {
                     
                     if let data = try pageHistoryCache.readFromCache(pageNumber: uintPageNum) {
                         pageData = data
