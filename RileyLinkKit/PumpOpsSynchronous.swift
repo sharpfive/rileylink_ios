@@ -439,7 +439,7 @@ class PumpOpsSynchronous {
                         // check for out of order event, if possible don't do this check
                         // remove eventTimestampDeltaAllowance
                         // check that event is less than the startDate
-                        let timestampedEvent = TimestampedHistoryEvent(pumpEvent: event, date: Date())
+                        let timestampedEvent = TimestampedHistoryEvent(pumpEvent: event, date: date)
                         
                         // Don't check events that can be out of order
                         if !pumpModel.mayHaveOutOfOrderEvents && !timestampedEvent.isMutable() {
@@ -454,7 +454,7 @@ class PumpOpsSynchronous {
                                 if (date.compare(startDate) != .orderedAscending) {
                                     timeCursor = date
                                 }
-                                events.insert(TimestampedHistoryEvent(pumpEvent: event, date: date), at: 0)
+                                events.insert(timestampedEvent, at: 0)
                             }
                         }
                     }
