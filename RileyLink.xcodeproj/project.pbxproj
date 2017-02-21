@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		2B19B9881DF3EF68006AB65F /* NewTimePumpEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B19B9871DF3EF68006AB65F /* NewTimePumpEvent.swift */; };
+		2FDD22811E5CD2E900E79C5A /* PumpOpsSynchronousTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FDD22801E5CD2E900E79C5A /* PumpOpsSynchronousTests.swift */; };
 		430D64CE1CB855AB00FCA750 /* RileyLinkBLEKit.h in Headers */ = {isa = PBXBuildFile; fileRef = 430D64CD1CB855AB00FCA750 /* RileyLinkBLEKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		430D64D51CB855AB00FCA750 /* RileyLinkBLEKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 430D64CB1CB855AB00FCA750 /* RileyLinkBLEKit.framework */; };
 		430D64DC1CB855AB00FCA750 /* RileyLinkBLEKitTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 430D64DB1CB855AB00FCA750 /* RileyLinkBLEKitTests.m */; };
@@ -464,6 +465,7 @@
 
 /* Begin PBXFileReference section */
 		2B19B9871DF3EF68006AB65F /* NewTimePumpEvent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NewTimePumpEvent.swift; sourceTree = "<group>"; };
+		2FDD22801E5CD2E900E79C5A /* PumpOpsSynchronousTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PumpOpsSynchronousTests.swift; sourceTree = "<group>"; };
 		430D64CB1CB855AB00FCA750 /* RileyLinkBLEKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = RileyLinkBLEKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		430D64CD1CB855AB00FCA750 /* RileyLinkBLEKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RileyLinkBLEKit.h; sourceTree = "<group>"; };
 		430D64CF1CB855AB00FCA750 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -1238,6 +1240,7 @@
 			children = (
 				C12EA25F198B436900309FA4 /* RileyLinkTests.m */,
 				C12EA25A198B436900309FA4 /* Supporting Files */,
+				2FDD22801E5CD2E900E79C5A /* PumpOpsSynchronousTests.swift */,
 			);
 			path = RileyLinkTests;
 			sourceTree = SOURCE_ROOT;
@@ -1793,6 +1796,7 @@
 					};
 					C12EA251198B436800309FA4 = {
 						DevelopmentTeam = Y29J3QU5XB;
+						LastSwiftMigration = 0820;
 						TestTargetID = C12EA236198B436800309FA4;
 					};
 					C1B3830A1CD0665D00CE7782 = {
@@ -2225,6 +2229,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2FDD22811E5CD2E900E79C5A /* PumpOpsSynchronousTests.swift in Sources */,
 				C12EA260198B436900309FA4 /* RileyLinkTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2846,6 +2851,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.rileylink.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = RileyLinkTests;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 3.0;
 				TEST_HOST = "$(BUNDLE_LOADER)";
 				WRAPPER_EXTENSION = xctest;
 			};
@@ -2862,6 +2868,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.rileylink.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = RileyLinkTests;
+				SWIFT_VERSION = 3.0;
 				TEST_HOST = "$(BUNDLE_LOADER)";
 				WRAPPER_EXTENSION = xctest;
 			};
