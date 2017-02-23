@@ -44,7 +44,7 @@ class PumpOpsSynchronous {
         self.communication = PumpOpsCommunication(session: session)
     }
     
-    private func makePumpMessage(to messageType: MessageType, using body: MessageBody = CarelinkShortMessageBody()) -> PumpMessage {
+    internal func makePumpMessage(to messageType: MessageType, using body: MessageBody = CarelinkShortMessageBody()) -> PumpMessage {
         return PumpMessage(packetType: .carelink, address: pump.pumpID, messageType: messageType, messageBody: body)
     }
     
@@ -480,6 +480,8 @@ class PumpOpsSynchronous {
         var expectedFrameNum = 1
         var curResp = firstResponse.messageBody as! GetHistoryPageCarelinkMessageBody
         
+        NSLog("getHistoryPage frameNum \(expectedFrameNum) data:\(curResp.txData.hexadecimalString)")
+        
         while(expectedFrameNum == curResp.frameNumber) {
             frameData.append(curResp.frame)
             expectedFrameNum += 1
@@ -492,6 +494,7 @@ class PumpOpsSynchronous {
                     throw PumpCommsError.rfCommsFailure("Bad packet type or message type. Possible interference.")
                 }
                 curResp = resp.messageBody as! GetHistoryPageCarelinkMessageBody
+                NSLog("getHistoryPage frameNum \(expectedFrameNum) data:\(curResp.txData.hexadecimalString)")
             } else {
                 let cmd = SendPacketCmd()
                 cmd.packet = RFPacket(data: msg.txData)
@@ -704,6 +707,10 @@ class PumpOpsCommunication {
             throw PumpCommsError.rileyLinkTimeout
         }
         
+        if let rawReceivedData = cmd.rawReceivedData {
+            NSLog("aiaidata:\(rawReceivedData)")
+        }
+        
         guard let data = cmd.receivedPacket.data else {
             if cmd.didReceiveResponse {
                 throw PumpCommsError.unknownResponse(rx: cmd.rawReceivedData.hexadecimalString, during: "Sent \(msg)")
@@ -722,5 +729,4 @@ class PumpOpsCommunication {
         
         return message
     }
-
 }
