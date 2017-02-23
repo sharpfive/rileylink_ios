@@ -38,7 +38,7 @@ class PumpOpsSynchronousTests: XCTestCase {
         [unowned self] in
         var messages = [PumpMessage]()
         for frameString in self.frameResponses {
-            let frameData: Data = dataFromHexString(frameString)
+            let frameData: Data = self.dataFromHexString(frameString)
             let getHistoryPageMessageBody = GetHistoryPageCarelinkMessageBody(rxData: frameData)!
             let getHistoryPageMessage = PumpMessage(packetType: PacketType.carelink, address: self.pumpID, messageType: .getHistoryPage, messageBody: getHistoryPageMessageBody)
             
@@ -125,18 +125,18 @@ class PumpOpsSynchronousTests: XCTestCase {
             return PumpMessage(rxData: Data())!
         }
     }
-}
-
-func dataFromHexString(_ hexString: String) -> Data {
-    var data = Data()
-    var hexString = hexString
-    while(hexString.characters.count > 0) {
-        let c: String = hexString.substring(to: hexString.index(hexString.startIndex, offsetBy: 2))
-        hexString = hexString.substring(from: hexString.index(hexString.startIndex, offsetBy: 2))
-        var ch: UInt32 = 0
-        Scanner(string: c).scanHexInt32(&ch)
-        var char = UInt8(ch)
-        data.append(&char, count: 1)
+    
+    func dataFromHexString(_ hexString: String) -> Data {
+        var data = Data()
+        var hexString = hexString
+        while(hexString.characters.count > 0) {
+            let c: String = hexString.substring(to: hexString.index(hexString.startIndex, offsetBy: 2))
+            hexString = hexString.substring(from: hexString.index(hexString.startIndex, offsetBy: 2))
+            var ch: UInt32 = 0
+            Scanner(string: c).scanHexInt32(&ch)
+            var char = UInt8(ch)
+            data.append(&char, count: 1)
+        }
+        return data
     }
-    return data
 }
