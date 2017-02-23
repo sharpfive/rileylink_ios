@@ -87,10 +87,9 @@ class PumpOpsSynchronousTests: XCTestCase {
         pumpOpsCommunicationStub.responses[.pumpAck] = Array(framePumpMessages.suffix(from: 1))
     
         do {
-            try sut.getHistoryEvents(since: date)
+            try _ = sut.getHistoryEvents(since: date)
             
         } catch {
-            NSLog("testError:\(error)")
             XCTFail()
         }
     }
