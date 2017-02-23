@@ -69,7 +69,6 @@ class PumpOpsSynchronousTests: XCTestCase {
         rileyLinkCmdSession = RileyLinkCmdSession()
         pumpOpsCommunicationStub = PumpOpsCommunicationStub(session: rileyLinkCmdSession)
         
-        
         sut = PumpOpsSynchronous(pumpState: pumpState, session: rileyLinkCmdSession)
         sut.communication = pumpOpsCommunicationStub
     }
