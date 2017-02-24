@@ -75,8 +75,6 @@ class PumpOpsSynchronousTests: XCTestCase {
     
     func testErrorIsntThrown() {
     
-        let date = Date()
-        
         let pumpAckMessage = sut.makePumpMessage(to: .pumpAck)
         
         // pump will be called twice, normal operation will receive a pumpAck and getHistoryPageMessage
@@ -86,12 +84,38 @@ class PumpOpsSynchronousTests: XCTestCase {
         pumpOpsCommunicationStub.responses[.pumpAck] = Array(framePumpMessages.suffix(from: 1))
     
         do {
-            try _ = sut.getHistoryEvents(since: date)
+            try _ = sut.getHistoryEvents(since: Date())
             
         } catch {
             XCTFail()
         }
     }
+    
+    func testEventReturned() {
+        let pumpAckMessage = sut.makePumpMessage(to: .pumpAck)
+        
+        // pump will be called twice, normal operation will receive a pumpAck and getHistoryPageMessage
+        pumpOpsCommunicationStub.responses[.getHistoryPage] = [pumpAckMessage, framePumpMessages[0]]
+        
+        // Pump sends more data after we send a .pumpAck
+        pumpOpsCommunicationStub.responses[.pumpAck] = Array(framePumpMessages.suffix(from: 1))
+        
+        //2017-02-22-18:00 UTC
+        let date = Date(timeIntervalSince1970: 0)
+        do {
+            let eventsTuple = try sut.getHistoryEvents(since: date)
+            let historyEvent = eventsTuple.0
+            
+            XCTAssertEqual(historyEvent.count, 55)
+        } catch {
+            
+        }
+        
+        //let asdf = eventsTuple.1
+    }
+    
+    //TODO write tests around existing functionality and time filtering
+    //TODO add events with bolus
     
     class PumpOpsCommunicationStub : PumpOpsCommunication {
         
