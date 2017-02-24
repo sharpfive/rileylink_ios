@@ -445,20 +445,22 @@ class PumpOpsSynchronous {
                     timestamp.timeZone = pump.timeZone
 
                     if let date = timestamp.date?.addingTimeInterval(timeAdjustmentInterval) {
-//                        if date.timeIntervalSince(startDate) < -eventTimestampDeltaAllowance {
-//                            NSLog("Found event at (%@) to be more than %@s before startDate(%@)", date as NSDate, String(describing: eventTimestampDeltaAllowance), startDate as NSDate);
-//                            break pages
-//                        } else if date.timeIntervalSince(timeCursor) > eventTimestampDeltaAllowance {
-//                            NSLog("Found event (%@) out of order in history. Ending history fetch.", date as NSDate)
-//                            break pages
-//                        } else {
-//                            if (date.compare(startDate) != .orderedAscending) {
-//                                timeCursor = date
-//                            }
-//                            events.insert(TimestampedHistoryEvent(pumpEvent: event, date: date), at: 0)
-//                        }
+                        if date.timeIntervalSince(startDate) < -eventTimestampDeltaAllowance {
+                            NSLog("Found event at (%@) to be more than %@s before startDate(%@)", date as NSDate, String(describing: eventTimestampDeltaAllowance), startDate as NSDate);
+                            break pages
+                        } else if date.timeIntervalSince(timeCursor) > eventTimestampDeltaAllowance {
+                            NSLog("Found event (%@) out of order in history. Ending history fetch.", date as NSDate)
+                            break pages
+                        } else {
+                            if (date.compare(startDate) != .orderedAscending) {
+                                timeCursor = date
+                            }
+                            events.insert(TimestampedHistoryEvent(pumpEvent: event, date: date), at: 0)
+                        }
                         
-                        events.insert(TimestampedHistoryEvent(pumpEvent: event, date: date), at: 0)
+                        //events.insert(TimestampedHistoryEvent(pumpEvent: event, date: date), at: 0)
+                    } else {
+                        NSLog("aiai failed timestamp: \(timestamp)")
                     }
                     
                     

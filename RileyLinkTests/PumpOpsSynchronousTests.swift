@@ -235,7 +235,8 @@ class PumpOpsSynchronousTests: XCTestCase {
             let eventsTuple = try sut.getHistoryEvents(since: date)
             let historyEvent = eventsTuple.0
             
-            XCTAssertEqual(historyEvent.count, 385)
+            // Ends because of out of order
+            XCTAssertEqual(historyEvent.count, 332)
         } catch {
             
         }
