@@ -442,20 +442,21 @@ class PumpOpsSynchronous {
                         let timestampedEvent = TimestampedHistoryEvent(pumpEvent: event, date: date)
                         
                         // Don't check events that can be out of order
-                        if !pumpModel.mayHaveOutOfOrderEvents && !timestampedEvent.isMutable() {
+                        if pumpModel.mayHaveOutOfOrderEvents && timestampedEvent.isMutable() {
+                            continue
+                        }
                         
-                            if date.timeIntervalSince(startDate) < 0 {
-                                NSLog("Found event at (%@) to be before startDate(%@)", date as NSDate, startDate as NSDate);
-                                break pages
-                            } else if date.timeIntervalSince(timeCursor) > 0 {
-                                NSLog("Found event (%@) out of order in history. Ending history fetch.", date as NSDate)
-                                break pages
-                            } else {
-                                if (date.compare(startDate) != .orderedAscending) {
-                                    timeCursor = date
-                                }
-                                events.insert(timestampedEvent, at: 0)
+                        if date.timeIntervalSince(startDate) < 0 {
+                            NSLog("Found event at (%@) to be before startDate(%@)", date as NSDate, startDate as NSDate);
+                            break pages
+                        } else if date.timeIntervalSince(timeCursor) > 0 {
+                            NSLog("Found event (%@) out of order in history. Ending history fetch.", date as NSDate)
+                            break pages
+                        } else {
+                            if (date.compare(startDate) != .orderedAscending) {
+                                timeCursor = date
                             }
+                            events.insert(timestampedEvent, at: 0)
                         }
                     }
                 }
