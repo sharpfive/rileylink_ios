@@ -442,6 +442,8 @@ class PumpOpsSynchronous {
 
                     var timestamp = event.timestamp
                     timestamp.timeZone = pump.timeZone
+                    
+                    NSLog("event.timestamp:\(event.timestamp))")
 
                     if let date = timestamp.date?.addingTimeInterval(timeAdjustmentInterval) {
                         if date.timeIntervalSince(startDate) < -eventTimestampDeltaAllowance {

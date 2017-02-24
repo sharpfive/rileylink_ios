@@ -200,36 +200,6 @@ class PumpOpsSynchronousTests: XCTestCase {
     }
     
     func testAllEventsReturned() {
-        
-//        // Build array of Messages for each frame
-//        let frameZeroMessages = buildPumpMessagesFromFrameArray(fetchPageZeroFrames)
-//        let frameOneMessages = buildPumpMessagesFromFrameArray(fetchPageOneFrames)
-//        let frameTwoMessages = buildPumpMessagesFromFrameArray(fetchPageTwoFrames)
-//        let frameThreeMessages = buildPumpMessagesFromFrameArray(fetchPageThreeFrames)
-//        let frameFourMessages = buildPumpMessagesFromFrameArray(fetchPageFourFrames)
-//        
-//        let pumpAckMessage = sut.makePumpMessage(to: .pumpAck)
-//        
-//        let emptyHistoryPageMessage = sut.makePumpMessage(to: .emptyHistoryPage)
-//        
-//        var getHistoryPageArray = [pumpAckMessage, frameZeroMessages[0]]
-//        getHistoryPageArray.append(contentsOf: [pumpAckMessage, frameOneMessages[0]])
-//        getHistoryPageArray.append(contentsOf: [pumpAckMessage, frameTwoMessages[0]])
-//        getHistoryPageArray.append(contentsOf: [pumpAckMessage, frameThreeMessages[0]])
-//        getHistoryPageArray.append(contentsOf: [pumpAckMessage, frameFourMessages[0]])
-//        getHistoryPageArray.append(emptyHistoryPageMessage)
-//        
-//        // pump will be called twice, normal operation will receive a pumpAck and getHistoryPageMessage
-//        pumpOpsCommunicationStub.responses[.getHistoryPage] = getHistoryPageArray
-//        
-//        var pumpAckArray = Array(frameZeroMessages.suffix(from: 1))
-//        pumpAckArray.append(contentsOf: Array(frameOneMessages.suffix(from: 1)))
-//        pumpAckArray.append(contentsOf: Array(frameTwoMessages.suffix(from: 1)))
-//        pumpAckArray.append(contentsOf: Array(frameThreeMessages.suffix(from: 1)))
-//        pumpAckArray.append(contentsOf: Array(frameFourMessages.suffix(from: 1)))
-//        // Pump sends more data after we send a .pumpAck
-//        pumpOpsCommunicationStub.responses[.pumpAck] = pumpAckArray
-        
         pumpOpsCommunicationStub.responses = buildResponsesDictionary()
         
         let date = Date(timeIntervalSince1970: 0)
@@ -240,12 +210,11 @@ class PumpOpsSynchronousTests: XCTestCase {
             // Ends because of out of order
             XCTAssertEqual(historyEvent.count, 332)
         } catch {
-            
+            XCTFail()
         }
     }
     
     func testEventsReturnedAfterTime() {
-        
         pumpOpsCommunicationStub.responses = buildResponsesDictionary()
         
         //02/11/2017 @ 12:00am (UTC)
@@ -257,7 +226,7 @@ class PumpOpsSynchronousTests: XCTestCase {
             // Ends because of out of order
             XCTAssertEqual(historyEvent.count, 293)
         } catch {
-            
+            XCTFail()
         }
     }
     
