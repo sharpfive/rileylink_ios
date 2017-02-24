@@ -395,6 +395,14 @@ class PumpOpsSynchronous {
         var events = [TimestampedHistoryEvent]()
         var timeAdjustmentInterval: TimeInterval = 0
         
+        let eventTimestampDeltaAllowance: TimeInterval
+        if pumpModel.appendsSquareWaveToHistoryOnStartOfDelivery {
+            eventTimestampDeltaAllowance = TimeInterval(minutes: 10)
+        } else {
+            eventTimestampDeltaAllowance = TimeInterval(hours: 9)
+        }
+
+        
         // Start with some time in the future, to account for the condition when the pump's clock is ahead
         // of ours by a small amount.
         var timeCursor = Date(timeIntervalSinceNow: TimeInterval(minutes: 60))
@@ -436,30 +444,21 @@ class PumpOpsSynchronous {
                     timestamp.timeZone = pump.timeZone
 
                     if let date = timestamp.date?.addingTimeInterval(timeAdjustmentInterval) {
-                        // check for out of order event, if possible don't do this check
-                        // remove eventTimestampDeltaAllowance
-                        // check that event is less than the startDate
-                        let timestampedEvent = TimestampedHistoryEvent(pumpEvent: event, date: date)
-                        
-                        // Don't check events that can be out of order
-                        if !pumpModel.mayHaveOutOfOrderEvents && !timestampedEvent.isMutable() {
-                        
-                            if date.timeIntervalSince(startDate) < 0 {
-                                NSLog("Found event at (%@) to be before startDate(%@)", date as NSDate, startDate as NSDate);
-                                break pages
-                            } else if date.timeIntervalSince(timeCursor) > 0 {
-                                NSLog("Found event (%@) out of order in history. Ending history fetch.", date as NSDate)
-                                break pages
+                        if date.timeIntervalSince(startDate) < -eventTimestampDeltaAllowance {
+                            NSLog("Found event at (%@) to be more than %@s before startDate(%@)", date as NSDate, String(describing: eventTimestampDeltaAllowance), startDate as NSDate);
+                            break pages
+                        } else if date.timeIntervalSince(timeCursor) > eventTimestampDeltaAllowance {
+                            NSLog("Found event (%@) out of order in history. Ending history fetch.", date as NSDate)
+                            break pages
+                        } else {
+                            if (date.compare(startDate) != .orderedAscending) {
+                                timeCursor = date
                             }
+                            events.insert(TimestampedHistoryEvent(pumpEvent: event, date: date), at: 0)
                         }
-                        
-                        if (date.compare(startDate) != .orderedAscending) {
-                            timeCursor = date
-                        }
-                        events.insert(timestampedEvent, at: 0)
                     }
+                    
                 }
-
                 if let changeTimeEvent = event as? ChangeTimePumpEvent, let newTimeEvent = lastEvent as? NewTimePumpEvent {
                     timeAdjustmentInterval += (newTimeEvent.timestamp.date?.timeIntervalSince(changeTimeEvent.timestamp.date!))!
                 }
