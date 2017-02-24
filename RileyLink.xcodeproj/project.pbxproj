@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		2B19B9881DF3EF68006AB65F /* NewTimePumpEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B19B9871DF3EF68006AB65F /* NewTimePumpEvent.swift */; };
+		2F962EB91E60C4380070EFBD /* PumpModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F962EB81E60C4380070EFBD /* PumpModelTests.swift */; };
 		2FDD22811E5CD2E900E79C5A /* PumpOpsSynchronousTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FDD22801E5CD2E900E79C5A /* PumpOpsSynchronousTests.swift */; };
 		430D64CE1CB855AB00FCA750 /* RileyLinkBLEKit.h in Headers */ = {isa = PBXBuildFile; fileRef = 430D64CD1CB855AB00FCA750 /* RileyLinkBLEKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		430D64D51CB855AB00FCA750 /* RileyLinkBLEKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 430D64CB1CB855AB00FCA750 /* RileyLinkBLEKit.framework */; };
@@ -465,6 +466,7 @@
 
 /* Begin PBXFileReference section */
 		2B19B9871DF3EF68006AB65F /* NewTimePumpEvent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NewTimePumpEvent.swift; sourceTree = "<group>"; };
+		2F962EB81E60C4380070EFBD /* PumpModelTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PumpModelTests.swift; sourceTree = "<group>"; };
 		2FDD22801E5CD2E900E79C5A /* PumpOpsSynchronousTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PumpOpsSynchronousTests.swift; sourceTree = "<group>"; };
 		430D64CB1CB855AB00FCA750 /* RileyLinkBLEKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = RileyLinkBLEKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		430D64CD1CB855AB00FCA750 /* RileyLinkBLEKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RileyLinkBLEKit.h; sourceTree = "<group>"; };
@@ -899,6 +901,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2F962EB71E60C3F60070EFBD /* MinimedKit */ = {
+			isa = PBXGroup;
+			children = (
+				2F962EB81E60C4380070EFBD /* PumpModelTests.swift */,
+			);
+			path = MinimedKit;
+			sourceTree = "<group>";
+		};
 		430D64CC1CB855AB00FCA750 /* RileyLinkBLEKit */ = {
 			isa = PBXGroup;
 			children = (
@@ -1238,6 +1248,7 @@
 		C12EA259198B436900309FA4 /* RileyLinkTests */ = {
 			isa = PBXGroup;
 			children = (
+				2F962EB71E60C3F60070EFBD /* MinimedKit */,
 				C12EA25F198B436900309FA4 /* RileyLinkTests.m */,
 				C12EA25A198B436900309FA4 /* Supporting Files */,
 				2FDD22801E5CD2E900E79C5A /* PumpOpsSynchronousTests.swift */,
@@ -2230,6 +2241,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2FDD22811E5CD2E900E79C5A /* PumpOpsSynchronousTests.swift in Sources */,
+				2F962EB91E60C4380070EFBD /* PumpModelTests.swift in Sources */,
 				C12EA260198B436900309FA4 /* RileyLinkTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
