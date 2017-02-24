@@ -387,22 +387,13 @@ class PumpOpsSynchronous {
         return results
     }
     
-    internal func getHistoryEvents(since startDate: Date) throws -> ([TimestampedHistoryEvent], PumpModel) {
+    internal func getHistoryEvents(since startDate: Date, checkDate: Date = Date()) throws -> ([TimestampedHistoryEvent], PumpModel) {
         try wakeup()
         
         let pumpModel = try getPumpModel()
         
         var events = [TimestampedHistoryEvent]()
-        var timeAdjustmentInterval: TimeInterval = 0
-        
-        // Start with some time in the future, to account for the condition when the pump's clock is ahead
-        // of ours by a small amount.
-        var timeCursor = Date(timeIntervalSinceNow: TimeInterval(minutes: 60))
-        
-        // Prevent returning duplicate content, which is possible e.g. in the case of rapid RF temp basal setting
-        var seenEventData = Set<Data>()
-        var lastEvent: PumpEvent?
-        
+                
         pages: for pageNum in 0..<16 {
             NSLog("Fetching page %d", pageNum)
             let pageData: Data
@@ -428,47 +419,66 @@ class PumpOpsSynchronous {
 
             let page = try HistoryPage(pageData: pageData, pumpModel: pumpModel)
 
-            for event in page.events.reversed() {
-                if let event = event as? TimestampedPumpEvent, !seenEventData.contains(event.rawData) {
-                    seenEventData.insert(event.rawData)
-
-                    var timestamp = event.timestamp
-                    timestamp.timeZone = pump.timeZone
-                    
-                    if let date = timestamp.date?.addingTimeInterval(timeAdjustmentInterval) {
-                        // check for out of order event, if possible don't do this check
-                        // remove eventTimestampDeltaAllowance
-                        // check that event is less than the startDate
-                        let timestampedEvent = TimestampedHistoryEvent(pumpEvent: event, date: date)
-                        
-                        // Don't check events that can be out of order
-                        if pumpModel.mayHaveOutOfOrderEvents && timestampedEvent.isMutable() {
-                            continue
-                        }
-                        
-                        if date.timeIntervalSince(startDate) < 0 {
-                            NSLog("Found event at (%@) to be before startDate(%@)", date as NSDate, startDate as NSDate);
-                            break pages
-                        } else if date.timeIntervalSince(timeCursor) > 0 {
-                            NSLog("Found event (%@) out of order in history. Ending history fetch.", date as NSDate)
-                            break pages
-                        } else {
-                            if (date.compare(startDate) != .orderedAscending) {
-                                timeCursor = date
-                            }
-                            events.insert(timestampedEvent, at: 0)
-                        }
-                    }
-                }
-
-                if let changeTimeEvent = event as? ChangeTimePumpEvent, let newTimeEvent = lastEvent as? NewTimePumpEvent {
-                    timeAdjustmentInterval += (newTimeEvent.timestamp.date?.timeIntervalSince(changeTimeEvent.timestamp.date!))!
-                }
-
-                lastEvent = event
-            }
+            let newEvents = convertPumpEventToTimestampedEvents(pumpEvents: page.events.reversed(), startDate: startDate, mayHaveOutOfOrderEvents: pumpModel.mayHaveOutOfOrderEvents)
+            
+            events.append(contentsOf: newEvents.0)
+            
         }
         return (events, pumpModel)
+    }
+    
+    internal func convertPumpEventToTimestampedEvents(pumpEvents: [PumpEvent], startDate: Date, checkDate: Date = Date(), mayHaveOutOfOrderEvents: Bool) -> ([TimestampedHistoryEvent], Bool) {
+    
+        // Start with some time in the future, to account for the condition when the pump's clock is ahead
+        // of ours by a small amount.
+        var timeCursor = Date(timeIntervalSinceNow: TimeInterval(minutes: 60))
+        var events = [TimestampedHistoryEvent]()
+        var timeAdjustmentInterval: TimeInterval = 0
+        var seenEventData = Set<Data>()
+        var lastEvent: PumpEvent?
+        
+        for event in pumpEvents {
+            if let event = event as? TimestampedPumpEvent, !seenEventData.contains(event.rawData) {
+                seenEventData.insert(event.rawData)
+                
+                var timestamp = event.timestamp
+                timestamp.timeZone = pump.timeZone
+                
+                if let date = timestamp.date?.addingTimeInterval(timeAdjustmentInterval) {
+                    // check for out of order event, if possible don't do this check
+                    // remove eventTimestampDeltaAllowance
+                    // check that event is less than the startDate
+                    let timestampedEvent = TimestampedHistoryEvent(pumpEvent: event, date: date)
+                    
+                    // Don't check events that can be out of order
+                    if mayHaveOutOfOrderEvents && timestampedEvent.isMutable(atDate: checkDate) {
+                        continue
+                    }
+                    
+                    if date.timeIntervalSince(startDate) < 0 {
+                        NSLog("Found event at (%@) to be before startDate(%@)", date as NSDate, startDate as NSDate);
+                        return (events, true)
+                        //break pages
+                    } else if date.timeIntervalSince(timeCursor) > 0 {
+                        NSLog("Found event (%@) out of order in history. Ending history fetch.", date as NSDate)
+                        return (events, true)
+//                        break pages
+                    } else {
+                        if (date.compare(startDate) != .orderedAscending) {
+                            timeCursor = date
+                        }
+                        events.insert(timestampedEvent, at: 0)
+                    }
+                }
+            }
+            
+            if let changeTimeEvent = event as? ChangeTimePumpEvent, let newTimeEvent = lastEvent as? NewTimePumpEvent {
+                timeAdjustmentInterval += (newTimeEvent.timestamp.date?.timeIntervalSince(changeTimeEvent.timestamp.date!))!
+            }
+            
+            lastEvent = event
+        }
+        return (events, false)
     }
     
     private func getHistoryPage(_ pageNum: Int) throws -> Data {

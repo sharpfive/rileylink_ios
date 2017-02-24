@@ -88,6 +88,12 @@ class TimestampedHistoryEventTests: XCTestCase {
 //        
 //        XCTAssertTrue(sut.isMutable())
 //    }
+    
+    func testEventsAreDoneCorrectly() {
+        //aiai build array of PumpEvents
+        
+        sut.convertPumpEventToTimestampedEvents(asdfouhawf)
+    }
 
     func getNormalBolusEvent() -> BolusNormalPumpEvent {
         let events = historyPage.events
