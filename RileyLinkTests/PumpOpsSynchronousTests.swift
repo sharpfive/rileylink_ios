@@ -201,6 +201,70 @@ class PumpOpsSynchronousTests: XCTestCase {
     
     func testAllEventsReturned() {
         
+//        // Build array of Messages for each frame
+//        let frameZeroMessages = buildPumpMessagesFromFrameArray(fetchPageZeroFrames)
+//        let frameOneMessages = buildPumpMessagesFromFrameArray(fetchPageOneFrames)
+//        let frameTwoMessages = buildPumpMessagesFromFrameArray(fetchPageTwoFrames)
+//        let frameThreeMessages = buildPumpMessagesFromFrameArray(fetchPageThreeFrames)
+//        let frameFourMessages = buildPumpMessagesFromFrameArray(fetchPageFourFrames)
+//        
+//        let pumpAckMessage = sut.makePumpMessage(to: .pumpAck)
+//        
+//        let emptyHistoryPageMessage = sut.makePumpMessage(to: .emptyHistoryPage)
+//        
+//        var getHistoryPageArray = [pumpAckMessage, frameZeroMessages[0]]
+//        getHistoryPageArray.append(contentsOf: [pumpAckMessage, frameOneMessages[0]])
+//        getHistoryPageArray.append(contentsOf: [pumpAckMessage, frameTwoMessages[0]])
+//        getHistoryPageArray.append(contentsOf: [pumpAckMessage, frameThreeMessages[0]])
+//        getHistoryPageArray.append(contentsOf: [pumpAckMessage, frameFourMessages[0]])
+//        getHistoryPageArray.append(emptyHistoryPageMessage)
+//        
+//        // pump will be called twice, normal operation will receive a pumpAck and getHistoryPageMessage
+//        pumpOpsCommunicationStub.responses[.getHistoryPage] = getHistoryPageArray
+//        
+//        var pumpAckArray = Array(frameZeroMessages.suffix(from: 1))
+//        pumpAckArray.append(contentsOf: Array(frameOneMessages.suffix(from: 1)))
+//        pumpAckArray.append(contentsOf: Array(frameTwoMessages.suffix(from: 1)))
+//        pumpAckArray.append(contentsOf: Array(frameThreeMessages.suffix(from: 1)))
+//        pumpAckArray.append(contentsOf: Array(frameFourMessages.suffix(from: 1)))
+//        // Pump sends more data after we send a .pumpAck
+//        pumpOpsCommunicationStub.responses[.pumpAck] = pumpAckArray
+        
+        pumpOpsCommunicationStub.responses = buildResponsesDictionary()
+        
+        let date = Date(timeIntervalSince1970: 0)
+        do {
+            let eventsTuple = try sut.getHistoryEvents(since: date)
+            let historyEvent = eventsTuple.0
+            
+            // Ends because of out of order
+            XCTAssertEqual(historyEvent.count, 332)
+        } catch {
+            
+        }
+    }
+    
+    func testEventsReturnedAfterTime() {
+        
+        pumpOpsCommunicationStub.responses = buildResponsesDictionary()
+        
+        //02/11/2017 @ 12:00am (UTC)
+        let date = Date(timeIntervalSince1970: 1486771200)
+        do {
+            let eventsTuple = try sut.getHistoryEvents(since: date)
+            let historyEvent = eventsTuple.0
+            
+            // Ends because of out of order
+            XCTAssertEqual(historyEvent.count, 293)
+        } catch {
+            
+        }
+    }
+    
+    func buildResponsesDictionary() -> [MessageType : [PumpMessage]] {
+        
+        var dictionary = [MessageType : [PumpMessage]]()
+        
         // Build array of Messages for each frame
         let frameZeroMessages = buildPumpMessagesFromFrameArray(fetchPageZeroFrames)
         let frameOneMessages = buildPumpMessagesFromFrameArray(fetchPageOneFrames)
@@ -220,7 +284,7 @@ class PumpOpsSynchronousTests: XCTestCase {
         getHistoryPageArray.append(emptyHistoryPageMessage)
         
         // pump will be called twice, normal operation will receive a pumpAck and getHistoryPageMessage
-        pumpOpsCommunicationStub.responses[.getHistoryPage] = getHistoryPageArray
+        dictionary[.getHistoryPage] = getHistoryPageArray
         
         var pumpAckArray = Array(frameZeroMessages.suffix(from: 1))
         pumpAckArray.append(contentsOf: Array(frameOneMessages.suffix(from: 1)))
@@ -228,18 +292,9 @@ class PumpOpsSynchronousTests: XCTestCase {
         pumpAckArray.append(contentsOf: Array(frameThreeMessages.suffix(from: 1)))
         pumpAckArray.append(contentsOf: Array(frameFourMessages.suffix(from: 1)))
         // Pump sends more data after we send a .pumpAck
-        pumpOpsCommunicationStub.responses[.pumpAck] = pumpAckArray
+        dictionary[.pumpAck] = pumpAckArray
         
-        let date = Date(timeIntervalSince1970: 0)
-        do {
-            let eventsTuple = try sut.getHistoryEvents(since: date)
-            let historyEvent = eventsTuple.0
-            
-            // Ends because of out of order
-            XCTAssertEqual(historyEvent.count, 332)
-        } catch {
-            
-        }
+        return dictionary
     }
     
     //TODO write tests around existing functionality and time filtering

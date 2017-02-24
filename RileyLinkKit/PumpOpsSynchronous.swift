@@ -390,7 +390,6 @@ class PumpOpsSynchronous {
     internal func getHistoryEvents(since startDate: Date) throws -> ([TimestampedHistoryEvent], PumpModel) {
         try wakeup()
         
-        var startDate = Date(timeIntervalSince1970: 0)
         let pumpModel = try getPumpModel()
         
         var events = [TimestampedHistoryEvent]()
