@@ -390,6 +390,7 @@ class PumpOpsSynchronous {
     internal func getHistoryEvents(since startDate: Date) throws -> ([TimestampedHistoryEvent], PumpModel) {
         try wakeup()
         
+        var startDate = Date(timeIntervalSince1970: 0)
         let pumpModel = try getPumpModel()
         
         var events = [TimestampedHistoryEvent]()
@@ -444,19 +445,23 @@ class PumpOpsSynchronous {
                     timestamp.timeZone = pump.timeZone
 
                     if let date = timestamp.date?.addingTimeInterval(timeAdjustmentInterval) {
-                        if date.timeIntervalSince(startDate) < -eventTimestampDeltaAllowance {
-                            NSLog("Found event at (%@) to be more than %@s before startDate(%@)", date as NSDate, String(describing: eventTimestampDeltaAllowance), startDate as NSDate);
-                            break pages
-                        } else if date.timeIntervalSince(timeCursor) > eventTimestampDeltaAllowance {
-                            NSLog("Found event (%@) out of order in history. Ending history fetch.", date as NSDate)
-                            break pages
-                        } else {
-                            if (date.compare(startDate) != .orderedAscending) {
-                                timeCursor = date
-                            }
-                            events.insert(TimestampedHistoryEvent(pumpEvent: event, date: date), at: 0)
-                        }
+//                        if date.timeIntervalSince(startDate) < -eventTimestampDeltaAllowance {
+//                            NSLog("Found event at (%@) to be more than %@s before startDate(%@)", date as NSDate, String(describing: eventTimestampDeltaAllowance), startDate as NSDate);
+//                            break pages
+//                        } else if date.timeIntervalSince(timeCursor) > eventTimestampDeltaAllowance {
+//                            NSLog("Found event (%@) out of order in history. Ending history fetch.", date as NSDate)
+//                            break pages
+//                        } else {
+//                            if (date.compare(startDate) != .orderedAscending) {
+//                                timeCursor = date
+//                            }
+//                            events.insert(TimestampedHistoryEvent(pumpEvent: event, date: date), at: 0)
+//                        }
+                        
+                        events.insert(TimestampedHistoryEvent(pumpEvent: event, date: date), at: 0)
                     }
+                    
+                    
                     
                 }
                 if let changeTimeEvent = event as? ChangeTimePumpEvent, let newTimeEvent = lastEvent as? NewTimePumpEvent {
