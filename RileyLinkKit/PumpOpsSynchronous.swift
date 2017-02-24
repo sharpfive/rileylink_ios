@@ -443,8 +443,6 @@ class PumpOpsSynchronous {
                     var timestamp = event.timestamp
                     timestamp.timeZone = pump.timeZone
                     
-                    NSLog("event.timestamp:\(event.timestamp))")
-
                     if let date = timestamp.date?.addingTimeInterval(timeAdjustmentInterval) {
                         if date.timeIntervalSince(startDate) < -eventTimestampDeltaAllowance {
                             NSLog("Found event at (%@) to be more than %@s before startDate(%@)", date as NSDate, String(describing: eventTimestampDeltaAllowance), startDate as NSDate);
@@ -458,14 +456,7 @@ class PumpOpsSynchronous {
                             }
                             events.insert(TimestampedHistoryEvent(pumpEvent: event, date: date), at: 0)
                         }
-                        
-                        //events.insert(TimestampedHistoryEvent(pumpEvent: event, date: date), at: 0)
-                    } else {
-                        NSLog("aiai failed timestamp: \(timestamp)")
                     }
-                    
-                    
-                    
                 }
                 if let changeTimeEvent = event as? ChangeTimePumpEvent, let newTimeEvent = lastEvent as? NewTimePumpEvent {
                     timeAdjustmentInterval += (newTimeEvent.timestamp.date?.timeIntervalSince(changeTimeEvent.timestamp.date!))!
