@@ -254,8 +254,8 @@ class PumpOpsSynchronousTests: XCTestCase {
     }
     
     func createBatteryEvent() -> BatteryPumpEvent {
-        let year = 16 //2016 UInt8(16) & 0b01111111
-        let month = 1
+        let year = 16 //2016
+        let month = 12
         let day = 1
         let hour = 0
         let minute = 0
