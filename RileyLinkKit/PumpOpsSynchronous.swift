@@ -458,11 +458,9 @@ class PumpOpsSynchronous {
                     if date.timeIntervalSince(startDate) < 0 {
                         NSLog("Found event at (%@) to be before startDate(%@)", date as NSDate, startDate as NSDate);
                         return (events, true)
-                        //break pages
                     } else if date.timeIntervalSince(timeCursor) > 0 {
                         NSLog("Found event (%@) out of order in history. Ending history fetch.", date as NSDate)
                         return (events, true)
-//                        break pages
                     } else {
                         if (date.compare(startDate) != .orderedAscending) {
                             timeCursor = date

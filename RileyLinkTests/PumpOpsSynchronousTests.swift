@@ -239,13 +239,7 @@ class PumpOpsSynchronousTests: XCTestCase {
     
     func createBatteryEvent(atTime date: Date = Date()) -> BatteryPumpEvent {
      
-
-        
-//        dateComponents.
         let calendar = Calendar.current
-        
-//        let dateComponents = DateComponents(calendar: calendar, year: 2007, month: 1, day: 7, hour: 0, minute: 0, second: 0)
-        //dateComponents.date!
         
         let year = calendar.component(.year, from: date) - 2000
         let month = calendar.component(.month, from: date)
@@ -258,17 +252,12 @@ class PumpOpsSynchronousTests: XCTestCase {
         let minuteByte = UInt8(minute) & 0b00111111
         let hourByte = UInt8(hour) & 0b00011111
         let dayByte = UInt8(day) & 0b00011111
-        
         let monthUpperComponent = (UInt8(month) & 0b00001100) << 4
         let monthLowerComponent = (UInt8(month) & 0b00000011) << 6
-        
         let secondMonthByte = secondByte | monthUpperComponent
         let minuteMonthByte = minuteByte | monthLowerComponent
-        
-//        let monthByte2 = UInt8(month)
         let yearByte = UInt8(year) & 0b01111111
 
-        
         let batteryData = Data(bytes: [0,0, secondMonthByte, minuteMonthByte, hourByte, dayByte, yearByte])
         let batteryPumpEvent = BatteryPumpEvent(availableData: batteryData, pumpModel: PumpModel.Model523)!
         return batteryPumpEvent
