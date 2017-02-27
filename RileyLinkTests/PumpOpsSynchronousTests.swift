@@ -150,11 +150,7 @@ class PumpOpsSynchronousTests: XCTestCase {
     func testErrorIsntThrown() {
         pumpOpsCommunicationStub.responses = buildResponsesDictionary()
         
-        do {
-            try _ = sut.getHistoryEvents(since: Date())
-        } catch {
-            XCTFail()
-        }
+        XCTAssertNoThrow(try _ = sut.getHistoryEvents(since: Date()))
     }
     
     func testAllEventsReturned() {
@@ -186,6 +182,11 @@ class PumpOpsSynchronousTests: XCTestCase {
         } catch {
             XCTFail()
         }
+    }
+    
+    func testUnexpectedResponse() {
+        pumpOpsCommunicationStub.responses = buildResponsesDictionary()
+        //pumpOpsCommunicationStub.responses[
     }
     
     func testBatteryEventDoesntCancel() {
@@ -231,7 +232,6 @@ class PumpOpsSynchronousTests: XCTestCase {
         
         XCTAssertEqual(result.events.count, 1)
     }
-    
     
     func createBatteryEvent(withDateComponent dateComponents: DateComponents) -> BatteryPumpEvent {
         return createBatteryEvent(atTime: dateComponents.date!)
@@ -345,5 +345,22 @@ class PumpOpsSynchronousTests: XCTestCase {
             data.append(&char, count: 1)
         }
         return data
+    }
+}
+
+// from http://jernejstrasner.com/2015/07/08/testing-throwable-methods-in-swift-2.html
+func XCTAssertThrows<T>(_ expression: @autoclosure  () throws -> T, _ message: String = "", file: StaticString = #file, line: UInt = #line) {
+    do {
+        let _ = try expression()
+        XCTFail("No error to catch! - \(message)", file: file, line: line)
+    } catch {
+    }
+}
+
+func XCTAssertNoThrow<T>(_ expression: @autoclosure  () throws -> T, _ message: String = "", file: StaticString = #file, line: UInt = #line) {
+    do {
+        let _ = try expression()
+    } catch let error {
+        XCTFail("Caught error: \(error) - \(message)", file: file, line: line)
     }
 }
