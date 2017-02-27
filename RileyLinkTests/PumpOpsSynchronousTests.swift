@@ -257,6 +257,30 @@ class PumpOpsSynchronousTests: XCTestCase {
         XCTAssertEqual(result.events.count, 1)
     }
     
+    func testOutOfOrderEventReturnsCancel() {
+        let datePassed2017 = date2017.date!.addingTimeInterval(60*60)
+        
+        let batteryEvent2007 = createBatteryEvent(withDateComponent: date2017)
+        let batteryEvent2017 = createBatteryEvent(withDateComponent: date2007)
+        let outOfOrderPumpEvents: [PumpEvent] = [batteryEvent2017, batteryEvent2007]
+        
+        let result = sut.convertPumpEventToTimestampedEvents(pumpEvents: outOfOrderPumpEvents, startDate: Date.distantPast, checkDate: datePassed2017, mayHaveOutOfOrderEvents: false)
+        
+        XCTAssertTrue(result.cancelled)
+    }
+    
+    func testOutOfOrderEventDoesntIncludeOutOfOrderEvent() {
+        let datePassed2017 = date2017.date!.addingTimeInterval(60*60)
+        
+        let batteryEvent2007 = createBatteryEvent(withDateComponent: date2017)
+        let batteryEvent2017 = createBatteryEvent(withDateComponent: date2007)
+        let outOfOrderPumpEvents: [PumpEvent] = [batteryEvent2017, batteryEvent2007]
+        
+        let result = sut.convertPumpEventToTimestampedEvents(pumpEvents: outOfOrderPumpEvents, startDate: Date.distantPast, checkDate: datePassed2017, mayHaveOutOfOrderEvents: false)
+        
+        XCTAssertEqual(result.events.count, 1)
+    }
+    
     func createBatteryEvent(withDateComponent dateComponents: DateComponents) -> BatteryPumpEvent {
         return createBatteryEvent(atTime: dateComponents.date!)
     }
