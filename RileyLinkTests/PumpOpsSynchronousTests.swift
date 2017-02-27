@@ -230,6 +230,57 @@ class PumpOpsSynchronousTests: XCTestCase {
         }
     }
     
+    func testBatteryEventDoesntCancel() {
+        let pumpEvents: [PumpEvent] = [createBatteryEvent()]
+        
+        let result = sut.convertPumpEventToTimestampedEvents(pumpEvents: pumpEvents, startDate: Date.distantPast, checkDate: Date.distantPast, mayHaveOutOfOrderEvents: false)
+        
+        XCTAssertFalse(result.cancelled)
+    }
+    
+    func testBatteryEventIsCreated() {
+        let pumpEvents: [PumpEvent] = [createBatteryEvent()]
+        
+        let result = sut.convertPumpEventToTimestampedEvents(pumpEvents: pumpEvents, startDate: Date.distantPast, checkDate: Date.distantPast, mayHaveOutOfOrderEvents: false)
+        
+        XCTAssertEqual(result.events.count, 1)
+    }
+    
+    func testBatteryEventIsasdf() {
+        let batteryEvent = createBatteryEvent()
+        let pumpEvents: [PumpEvent] = [batteryEvent]
+        
+        let result = sut.convertPumpEventToTimestampedEvents(pumpEvents: pumpEvents, startDate: Date.distantPast, checkDate: Date.distantPast, mayHaveOutOfOrderEvents: false)
+    }
+    
+    func createBatteryEvent() -> BatteryPumpEvent {
+        let year = 16 //2016 UInt8(16) & 0b01111111
+        let month = 1
+        let day = 1
+        let hour = 0
+        let minute = 0
+        let second = 0
+        
+        let secondByte = UInt8(second) & 0b00111111
+        let minuteByte = UInt8(minute) & 0b00111111
+        let hourByte = UInt8(hour) & 0b00011111
+        let dayByte = UInt8(day) & 0b00011111
+        
+        let monthUpperComponent = (UInt8(month) & 0b00001100) << 4
+        let monthLowerComponent = (UInt8(month) & 0b00000011) << 6
+        
+        let secondMonthByte = secondByte | monthUpperComponent
+        let minuteMonthByte = minuteByte | monthLowerComponent
+        
+//        let monthByte2 = UInt8(month)
+        let yearByte = UInt8(year) & 0b01111111
+
+        
+        let batteryData = Data(bytes: [0,0, secondMonthByte, minuteMonthByte, hourByte, dayByte, yearByte])
+        let batteryPumpEvent = BatteryPumpEvent(availableData: batteryData, pumpModel: PumpModel.Model523)!
+        return batteryPumpEvent
+    }
+    
     func buildResponsesDictionary() -> [MessageType : [PumpMessage]] {
         
         var dictionary = [MessageType : [PumpMessage]]()

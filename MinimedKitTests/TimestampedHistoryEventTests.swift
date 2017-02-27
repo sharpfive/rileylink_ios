@@ -92,7 +92,7 @@ class TimestampedHistoryEventTests: XCTestCase {
     func testEventsAreDoneCorrectly() {
         //aiai build array of PumpEvents
         
-        sut.convertPumpEventToTimestampedEvents(asdfouhawf)
+        //sut.convertPumpEventToTimestampedEvents(asdfouhawf)
     }
 
     func getNormalBolusEvent() -> BolusNormalPumpEvent {

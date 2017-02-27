@@ -427,7 +427,7 @@ class PumpOpsSynchronous {
         return (events, pumpModel)
     }
     
-    internal func convertPumpEventToTimestampedEvents(pumpEvents: [PumpEvent], startDate: Date, checkDate: Date = Date(), mayHaveOutOfOrderEvents: Bool) -> ([TimestampedHistoryEvent], Bool) {
+    internal func convertPumpEventToTimestampedEvents(pumpEvents: [PumpEvent], startDate: Date, checkDate: Date = Date(), mayHaveOutOfOrderEvents: Bool) -> (events: [TimestampedHistoryEvent], cancelled: Bool) {
     
         // Start with some time in the future, to account for the condition when the pump's clock is ahead
         // of ours by a small amount.
