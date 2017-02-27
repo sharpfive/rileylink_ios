@@ -153,6 +153,30 @@ class PumpOpsSynchronousTests: XCTestCase {
         XCTAssertNoThrow(try _ = sut.getHistoryEvents(since: Date()))
     }
     
+    func testUnexpectedResponseThrowsError() {
+        var responseDictionary = buildResponsesDictionary()
+        var pumpAckArray = responseDictionary[.getHistoryPage]!
+        pumpAckArray.insert(sut.makePumpMessage(to: .buttonPress), at: 0)
+        responseDictionary[.getHistoryPage]! = pumpAckArray
+        
+        pumpOpsCommunicationStub.responses = responseDictionary
+        
+        // Didn't receive a .pumpAck short reponse so throw an error
+        XCTAssertThrows(try _ = sut.getHistoryEvents(since: Date()))
+    }
+    
+    func testUnexpectedPumpAckResponseThrowsError() {
+        var responseDictionary = buildResponsesDictionary()
+        var pumpAckArray = responseDictionary[.getHistoryPage]!
+        pumpAckArray.insert(sut.makePumpMessage(to: .buttonPress), at: 1)
+        responseDictionary[.getHistoryPage]! = pumpAckArray
+        
+        pumpOpsCommunicationStub.responses = responseDictionary
+        
+        // Didn't receive a .getHistoryPage as 2nd response so throw an error
+        XCTAssertThrows(try _ = sut.getHistoryEvents(since: Date()))
+    }
+
     func testAllEventsReturned() {
         pumpOpsCommunicationStub.responses = buildResponsesDictionary()
         
