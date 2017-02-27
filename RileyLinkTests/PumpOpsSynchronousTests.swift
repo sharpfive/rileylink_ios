@@ -246,20 +246,55 @@ class PumpOpsSynchronousTests: XCTestCase {
         XCTAssertEqual(result.events.count, 1)
     }
     
-    func testBatteryEventIsasdf() {
-        let batteryEvent = createBatteryEvent()
-        let pumpEvents: [PumpEvent] = [batteryEvent]
+    let date2007 = DateComponents(calendar: Calendar.current, year: 2007, month: 1, day: 1)
+    let date2017 = DateComponents(calendar: Calendar.current, year: 2017, month: 1, day: 1)
+    
+    func testMultipleBatteryEvent() {
         
-        let result = sut.convertPumpEventToTimestampedEvents(pumpEvents: pumpEvents, startDate: Date.distantPast, checkDate: Date.distantPast, mayHaveOutOfOrderEvents: false)
+        let batteryEvent2007 = createBatteryEvent(withDateComponent: date2017)
+        let batteryEvent2017 = createBatteryEvent(withDateComponent: date2007)
+        let pumpEvents: [PumpEvent] = [batteryEvent2007, batteryEvent2017]
+        
+        let result = sut.convertPumpEventToTimestampedEvents(pumpEvents: pumpEvents, startDate: Date.distantPast, checkDate: Date(), mayHaveOutOfOrderEvents: false)
+        
+        XCTAssertEqual(result.events.count, 2)
+    }
+
+    func testOldBatteryEventIsFiltered() {
+        
+        let datePast2007 = date2007.date!.addingTimeInterval(60*60)
+        let datePassed2017 = date2017.date!.addingTimeInterval(60*60)
+        
+        let batteryEvent2007 = createBatteryEvent(withDateComponent: date2017)
+        let batteryEvent2017 = createBatteryEvent(withDateComponent: date2007)
+        let pumpEvents: [PumpEvent] = [batteryEvent2007, batteryEvent2017]
+        
+        let result = sut.convertPumpEventToTimestampedEvents(pumpEvents: pumpEvents, startDate: datePast2007, checkDate: datePassed2017, mayHaveOutOfOrderEvents: false)
+        
+        XCTAssertEqual(result.events.count, 1)
     }
     
-    func createBatteryEvent() -> BatteryPumpEvent {
-        let year = 16 //2016
-        let month = 12
-        let day = 1
-        let hour = 0
-        let minute = 0
-        let second = 0
+    
+    func createBatteryEvent(withDateComponent dateComponents: DateComponents) -> BatteryPumpEvent {
+        return createBatteryEvent(atTime: dateComponents.date!)
+    }
+    
+    func createBatteryEvent(atTime date: Date = Date()) -> BatteryPumpEvent {
+     
+
+        
+//        dateComponents.
+        let calendar = Calendar.current
+        
+//        let dateComponents = DateComponents(calendar: calendar, year: 2007, month: 1, day: 7, hour: 0, minute: 0, second: 0)
+        //dateComponents.date!
+        
+        let year = calendar.component(.year, from: date) - 2000
+        let month = calendar.component(.month, from: date)
+        let day = calendar.component(.day, from: date)
+        let hour = calendar.component(.hour, from: date)
+        let minute = calendar.component(.minute, from: date)
+        let second = calendar.component(.second, from: date)
         
         let secondByte = UInt8(second) & 0b00111111
         let minuteByte = UInt8(minute) & 0b00111111
