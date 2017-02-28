@@ -132,6 +132,7 @@ class PumpOpsSynchronousTests: XCTestCase {
     }()
     
     lazy var firstBolusEvent: BolusNormalPumpEvent = {
+        //2009:8:0:4:0:)
         return BolusNormalPumpEvent(
             availableData: Data(hexadecimalString: "01009000900058008a344b1010")!,
             pumpModel: self.pumpModel
@@ -139,6 +140,7 @@ class PumpOpsSynchronousTests: XCTestCase {
     }()
     
     lazy var secondBolusEvent: BolusNormalPumpEvent = {
+        //2010:8:0:24:0:16
         return BolusNormalPumpEvent(
             availableData: Data(hexadecimalString: "010080008000240009a24a1510")!,
             pumpModel: self.pumpModel
@@ -343,13 +345,51 @@ class PumpOpsSynchronousTests: XCTestCase {
         assertArray(result.events, containsPumpEvent: secondBolusEvent)
     }
     
-    func testMutableEventWith523() {
-        
+    func testMutableEventFor522() {
         // device that can have out of order events
+        pumpModel = PumpModel.Model522
+        
+        let data = Data(hexadecimalString:"338c4055145d1000")!
         
         // Create event like Temp Bolus (priming pump
+        let tempEventBolus = TempBasalPumpEvent(availableData: data, pumpModel: pumpModel)!
+        
+        let events:[PumpEvent] = [firstBolusEvent, secondBolusEvent, tempEventBolus]
+        
+        let result = sut.convertPumpEventToTimestampedEvents(pumpEvents: events, startDate: Date.distantPast, checkDate: datePast2017, mayHaveOutOfOrderEvents: true)
         
         // It should not be counted for IoB (how to measure)
+        XCTAssertFalse(array(result.events, containsPumpEvent: tempEventBolus))
+    }
+    
+    func testMutableEventIsCounted() {
+        // device that can have out of order events
+        pumpModel = PumpModel.Model522
+        
+        let data = Data(hexadecimalString:"338c4055145d1000")!
+        
+        // Create event like Temp Bolus (priming pump
+        //2016:5:29:20:21:0
+        let tempEventBolus = TempBasalPumpEvent(availableData: data, pumpModel: pumpModel)!
+        
+        let events:[PumpEvent] = [firstBolusEvent, secondBolusEvent, tempEventBolus]
+        
+        //aiai bolus should be complete, but within the Insulin action time
+        
+        let result = sut.convertPumpEventToTimestampedEvents(pumpEvents: events, startDate: Date.distantPast, checkDate: datePast2017, mayHaveOutOfOrderEvents: true)
+        
+        // It should be counted for IoB (how to measure)
+        XCTAssertTrue(array(result.events, containsPumpEvent: tempEventBolus))
+    }
+    
+    func testMultipleBolusEventsWith523() {
+        pumpModel = PumpModel.Model523
+        
+        let events = [firstBolusEvent, secondBolusEvent]
+        
+        let result = sut.convertPumpEventToTimestampedEvents(pumpEvents: events, startDate: Date.distantPast, checkDate: datePast2017, mayHaveOutOfOrderEvents: true)
+        
+        assertArray(result.events, containsPumpEvent: secondBolusEvent)
     }
     
     func createBatteryEvent(withDateComponent dateComponents: DateComponents) -> BatteryPumpEvent {
@@ -467,11 +507,22 @@ class PumpOpsSynchronousTests: XCTestCase {
     }
 }
 
+func array(_ timestampedEvents: [TimestampedHistoryEvent], containsPumpEvent pumpEvent: PumpEvent) -> Bool {
+    let event = timestampedEvents.first { $0.pumpEvent.rawData == pumpEvent.rawData }
+    
+    return event != nil
+}
+
 func assertArray(_ timestampedEvents: [TimestampedHistoryEvent], containsPumpEvent pumpEvent: PumpEvent) {
     XCTAssertNotNil(timestampedEvents.first { $0.pumpEvent.rawData == pumpEvent.rawData})
 }
+
 func assertArray(_ timestampedEvents: [TimestampedHistoryEvent], containsPumpEvents pumpEvents: [PumpEvent]) {
     pumpEvents.forEach { assertArray(timestampedEvents, containsPumpEvent: $0) }
+}
+
+func assertArray(_ timestampedEvents: [TimestampedHistoryEvent], doesntContainPumpEvent pumpEvent: PumpEvent) {
+    XCTAssertNil(timestampedEvents.first { $0.pumpEvent.rawData == pumpEvent.rawData })
 }
 
 // from http://jernejstrasner.com/2015/07/08/testing-throwable-methods-in-swift-2.html - transferred to Swift 3
