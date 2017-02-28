@@ -139,7 +139,7 @@ class PumpOpsSynchronousTests: XCTestCase {
             )!
     }()
     
-    lazy var secondBolusEvent: BolusNormalPumpEvent = {
+    lazy var bolusEvent2009: BolusNormalPumpEvent = {
         //2009-07-31 09:00:00 +0000
         return BolusNormalPumpEvent(
             availableData: Data(hexadecimalString: "010080008000240009a24a1510")!,
@@ -313,12 +313,12 @@ class PumpOpsSynchronousTests: XCTestCase {
             )!
         
         // set up multiple non-mutable Bolus event
-        let secondBolusEvent = BolusNormalPumpEvent(
+        let bolusEvent2009 = BolusNormalPumpEvent(
             availableData: Data(hexadecimalString: "010080008000240009a24a1510")!,
             pumpModel: pumpModel
             )!
         
-        let events = [firstBolusEvent, secondBolusEvent]
+        let events = [firstBolusEvent, bolusEvent2009]
         
         let result = sut.convertPumpEventToTimestampedEvents(pumpEvents: events, startDate: Date.distantPast, checkDate: datePast2017, mayHaveOutOfOrderEvents: true)
         
@@ -328,7 +328,7 @@ class PumpOpsSynchronousTests: XCTestCase {
     func testMultipleBolusEventsContainsFirstBolus() {
         pumpModel = PumpModel.Model522
         
-        let events = [bolusEvent2010, secondBolusEvent]
+        let events = [bolusEvent2010, bolusEvent2009]
         
         let result = sut.convertPumpEventToTimestampedEvents(pumpEvents: events, startDate: Date.distantPast, checkDate: datePast2017, mayHaveOutOfOrderEvents: true)
         
@@ -338,11 +338,11 @@ class PumpOpsSynchronousTests: XCTestCase {
     func testMultipleBolusEventsContainsSecondBolus() {
         pumpModel = PumpModel.Model522
         
-        let events = [bolusEvent2010, secondBolusEvent]
+        let events = [bolusEvent2010, bolusEvent2009]
         
         let result = sut.convertPumpEventToTimestampedEvents(pumpEvents: events, startDate: Date.distantPast, checkDate: datePast2017, mayHaveOutOfOrderEvents: true)
         
-        assertArray(result.events, containsPumpEvent: secondBolusEvent)
+        assertArray(result.events, containsPumpEvent: bolusEvent2009)
     }
     
     func testMutableEventFor522() {
@@ -354,7 +354,7 @@ class PumpOpsSynchronousTests: XCTestCase {
         // Create event like Temp Bolus (priming pump
         let tempEventBolus = TempBasalPumpEvent(availableData: data, pumpModel: pumpModel)!
         
-        let events:[PumpEvent] = [bolusEvent2010, secondBolusEvent, tempEventBolus]
+        let events:[PumpEvent] = [bolusEvent2010, bolusEvent2009, tempEventBolus]
         
         let result = sut.convertPumpEventToTimestampedEvents(pumpEvents: events, startDate: Date.distantPast, checkDate: datePast2017, mayHaveOutOfOrderEvents: true)
         
@@ -372,7 +372,7 @@ class PumpOpsSynchronousTests: XCTestCase {
         //2016:5:29:20:21:0
         let tempEventBolus = TempBasalPumpEvent(availableData: data, pumpModel: pumpModel)!
         
-        let events:[PumpEvent] = [bolusEvent2010, secondBolusEvent, tempEventBolus]
+        let events:[PumpEvent] = [bolusEvent2010, bolusEvent2009, tempEventBolus]
         
         //aiai bolus should be complete, but within the Insulin action time
         
@@ -385,11 +385,11 @@ class PumpOpsSynchronousTests: XCTestCase {
     func testMultipleBolusEventsWith523() {
         pumpModel = PumpModel.Model523
         
-        let events = [bolusEvent2010, secondBolusEvent]
+        let events = [bolusEvent2010, bolusEvent2009]
         
         let result = sut.convertPumpEventToTimestampedEvents(pumpEvents: events, startDate: Date.distantPast, checkDate: datePast2017, mayHaveOutOfOrderEvents: true)
         
-        assertArray(result.events, containsPumpEvent: secondBolusEvent)
+        assertArray(result.events, containsPumpEvent: bolusEvent2009)
     }
     
     func createBatteryEvent(withDateComponent dateComponents: DateComponents) -> BatteryPumpEvent {
