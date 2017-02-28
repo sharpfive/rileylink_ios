@@ -345,6 +345,9 @@ class PumpOpsSynchronousTests: XCTestCase {
         assertArray(result.events, containsPumpEvent: bolusEvent2009)
     }
     
+    //let regularBolus = BolusNormalPumpEvent(availableData: Data(hexadecimalString: "010080008000240009a24a1510")!, pumpModel: pumpModel)!
+    
+    
     func testMutableEventFor522() {
         // device that can have out of order events
         pumpModel = PumpModel.Model522
@@ -368,15 +371,16 @@ class PumpOpsSynchronousTests: XCTestCase {
         
         let data = Data(hexadecimalString:"338c4055145d1000")!
         
-        // Create event like Temp Bolus (priming pump
-        //2016:5:29:20:21:0
         let tempEventBolus = TempBasalPumpEvent(availableData: data, pumpModel: pumpModel)!
+        
+        let afterTempEventBolusDateComponent = DateComponents(calendar: Calendar.current, timeZone: nil, era: nil, year: 2016, month: 5, day: 29, hour: 21, minute: 1, second: 0)
+        let afterTempEventBolusDate = afterTempEventBolusDateComponent.date!
         
         let events:[PumpEvent] = [bolusEvent2010, bolusEvent2009, tempEventBolus]
         
         //aiai bolus should be complete, but within the Insulin action time
         
-        let result = sut.convertPumpEventToTimestampedEvents(pumpEvents: events, startDate: Date.distantPast, checkDate: datePast2017, mayHaveOutOfOrderEvents: true)
+        let result = sut.convertPumpEventToTimestampedEvents(pumpEvents: events, startDate: Date.distantPast, checkDate: afterTempEventBolusDate, mayHaveOutOfOrderEvents: true)
         
         // It should be counted for IoB (how to measure)
         XCTAssertTrue(array(result.events, containsPumpEvent: tempEventBolus))
