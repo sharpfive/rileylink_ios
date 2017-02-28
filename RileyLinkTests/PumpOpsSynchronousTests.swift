@@ -345,9 +345,23 @@ class PumpOpsSynchronousTests: XCTestCase {
         assertArray(result.events, containsPumpEvent: bolusEvent2009)
     }
     
-    //let regularBolus = BolusNormalPumpEvent(availableData: Data(hexadecimalString: "010080008000240009a24a1510")!, pumpModel: pumpModel)!
-    
-    
+    func testMutableBolusEventFor522() {
+        // device that can have out of order events
+        pumpModel = PumpModel.Model522
+        
+        // 2009-07-31 09:00:00 +0000
+        // 120 minute duration
+        let regularBolus = BolusNormalPumpEvent(availableData: Data(hexadecimalString: "010080048000240009a24a1510")!, pumpModel: pumpModel)!
+        
+        let hourAfterRegularBolusDate = regularBolus.timestamp.date!.addingTimeInterval(TimeInterval(minutes: 60))
+        let events:[PumpEvent] = [regularBolus]
+        
+        let result = sut.convertPumpEventToTimestampedEvents(pumpEvents: events, startDate: Date.distantPast, checkDate: hourAfterRegularBolusDate, mayHaveOutOfOrderEvents: true)
+        
+        // It should not be counted for IoB (how to measure)
+        XCTAssertFalse(array(result.events, containsPumpEvent: regularBolus))
+    }
+
     func testMutableEventFor522() {
         // device that can have out of order events
         pumpModel = PumpModel.Model522
