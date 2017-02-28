@@ -131,6 +131,20 @@ class PumpOpsSynchronousTests: XCTestCase {
         return self.dateComponents2017.date!.addingTimeInterval(60*60)
     }()
     
+    lazy var firstBolusEvent: BolusNormalPumpEvent = {
+        return BolusNormalPumpEvent(
+            availableData: Data(hexadecimalString: "01009000900058008a344b1010")!,
+            pumpModel: self.pumpModel
+            )!
+    }()
+    
+    lazy var secondBolusEvent: BolusNormalPumpEvent = {
+        return BolusNormalPumpEvent(
+            availableData: Data(hexadecimalString: "010080008000240009a24a1510")!,
+            pumpModel: self.pumpModel
+            )!
+    }()
+    
     var sut: PumpOpsSynchronous!
     var pumpState: PumpState!
     var pumpID: String!
@@ -310,18 +324,7 @@ class PumpOpsSynchronousTests: XCTestCase {
     }
     
     func testMultipleBolusEventsContainsFirstBolus() {
-        let pumpModel = PumpModel.Model522
-        
-        let firstBolusEvent = BolusNormalPumpEvent(
-            availableData: Data(hexadecimalString: "01009000900058008a344b1010")!,
-            pumpModel: pumpModel
-            )!
-        
-        // set up multiple non-mutable Bolus event
-        let secondBolusEvent = BolusNormalPumpEvent(
-            availableData: Data(hexadecimalString: "010080008000240009a24a1510")!,
-            pumpModel: pumpModel
-            )!
+        pumpModel = PumpModel.Model522
         
         let events = [firstBolusEvent, secondBolusEvent]
         
@@ -331,18 +334,7 @@ class PumpOpsSynchronousTests: XCTestCase {
     }
     
     func testMultipleBolusEventsContainsSecondBolus() {
-        let pumpModel = PumpModel.Model522
-        
-        let firstBolusEvent = BolusNormalPumpEvent(
-            availableData: Data(hexadecimalString: "01009000900058008a344b1010")!,
-            pumpModel: pumpModel
-            )!
-        
-        // set up multiple non-mutable Bolus event
-        let secondBolusEvent = BolusNormalPumpEvent(
-            availableData: Data(hexadecimalString: "010080008000240009a24a1510")!,
-            pumpModel: pumpModel
-            )!
+        pumpModel = PumpModel.Model522
         
         let events = [firstBolusEvent, secondBolusEvent]
         
