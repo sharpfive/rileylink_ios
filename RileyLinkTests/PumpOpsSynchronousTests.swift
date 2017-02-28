@@ -120,6 +120,16 @@ class PumpOpsSynchronousTests: XCTestCase {
         return getHistoryPageMessage
     }
     
+    let dateComponents2007 = DateComponents(calendar: Calendar.current, year: 2007, month: 1, day: 1)
+    let dateComponents2017 = DateComponents(calendar: Calendar.current, year: 2017, month: 1, day: 1)
+    
+    lazy var datePast2007: Date = {
+        return self.dateComponents2017.date!.addingTimeInterval(60*60)
+    }()
+    
+    lazy var datePast2017: Date = {
+        return self.dateComponents2017.date!.addingTimeInterval(60*60)
+    }()
     
     var sut: PumpOpsSynchronous!
     var pumpState: PumpState!
@@ -229,13 +239,10 @@ class PumpOpsSynchronousTests: XCTestCase {
         XCTAssertEqual(result.events.count, 1)
     }
     
-    let date2007 = DateComponents(calendar: Calendar.current, year: 2007, month: 1, day: 1)
-    let date2017 = DateComponents(calendar: Calendar.current, year: 2017, month: 1, day: 1)
-    
     func testMultipleBatteryEvent() {
         
-        let batteryEvent2007 = createBatteryEvent(withDateComponent: date2017)
-        let batteryEvent2017 = createBatteryEvent(withDateComponent: date2007)
+        let batteryEvent2007 = createBatteryEvent(withDateComponent: dateComponents2017)
+        let batteryEvent2017 = createBatteryEvent(withDateComponent: dateComponents2007)
         let pumpEvents: [PumpEvent] = [batteryEvent2007, batteryEvent2017]
         
         let result = sut.convertPumpEventToTimestampedEvents(pumpEvents: pumpEvents, startDate: Date.distantPast, checkDate: Date(), mayHaveOutOfOrderEvents: false)
@@ -245,11 +252,11 @@ class PumpOpsSynchronousTests: XCTestCase {
 
     func testOldBatteryEventIsFiltered() {
         
-        let datePast2007 = date2007.date!.addingTimeInterval(60*60)
-        let datePassed2017 = date2017.date!.addingTimeInterval(60*60)
+        let datePast2007 = dateComponents2007.date!.addingTimeInterval(60*60)
+        let datePassed2017 = dateComponents2017.date!.addingTimeInterval(60*60)
         
-        let batteryEvent2007 = createBatteryEvent(withDateComponent: date2017)
-        let batteryEvent2017 = createBatteryEvent(withDateComponent: date2007)
+        let batteryEvent2007 = createBatteryEvent(withDateComponent: dateComponents2017)
+        let batteryEvent2017 = createBatteryEvent(withDateComponent: dateComponents2007)
         let pumpEvents: [PumpEvent] = [batteryEvent2007, batteryEvent2017]
         
         let result = sut.convertPumpEventToTimestampedEvents(pumpEvents: pumpEvents, startDate: datePast2007, checkDate: datePassed2017, mayHaveOutOfOrderEvents: false)
@@ -258,10 +265,10 @@ class PumpOpsSynchronousTests: XCTestCase {
     }
     
     func testOutOfOrderEventReturnsCancel() {
-        let datePassed2017 = date2017.date!.addingTimeInterval(60*60)
+        let datePassed2017 = dateComponents2017.date!.addingTimeInterval(60*60)
         
-        let batteryEvent2007 = createBatteryEvent(withDateComponent: date2017)
-        let batteryEvent2017 = createBatteryEvent(withDateComponent: date2007)
+        let batteryEvent2007 = createBatteryEvent(withDateComponent: dateComponents2017)
+        let batteryEvent2017 = createBatteryEvent(withDateComponent: dateComponents2007)
         let outOfOrderPumpEvents: [PumpEvent] = [batteryEvent2017, batteryEvent2007]
         
         let result = sut.convertPumpEventToTimestampedEvents(pumpEvents: outOfOrderPumpEvents, startDate: Date.distantPast, checkDate: datePassed2017, mayHaveOutOfOrderEvents: false)
@@ -270,15 +277,94 @@ class PumpOpsSynchronousTests: XCTestCase {
     }
     
     func testOutOfOrderEventDoesntIncludeOutOfOrderEvent() {
-        let datePassed2017 = date2017.date!.addingTimeInterval(60*60)
+        let datePast2017 = dateComponents2017.date!.addingTimeInterval(60*60)
         
-        let batteryEvent2007 = createBatteryEvent(withDateComponent: date2017)
-        let batteryEvent2017 = createBatteryEvent(withDateComponent: date2007)
+        let batteryEvent2007 = createBatteryEvent(withDateComponent: dateComponents2017)
+        let batteryEvent2017 = createBatteryEvent(withDateComponent: dateComponents2007)
         let outOfOrderPumpEvents: [PumpEvent] = [batteryEvent2017, batteryEvent2007]
         
-        let result = sut.convertPumpEventToTimestampedEvents(pumpEvents: outOfOrderPumpEvents, startDate: Date.distantPast, checkDate: datePassed2017, mayHaveOutOfOrderEvents: false)
+        let result = sut.convertPumpEventToTimestampedEvents(pumpEvents: outOfOrderPumpEvents, startDate: Date.distantPast, checkDate: datePast2017, mayHaveOutOfOrderEvents: false)
         
         XCTAssertEqual(result.events.count, 1)
+    }
+    
+    func testMultipleBolusEvents() {
+        let pumpModel = PumpModel.Model522
+        
+        let firstBolusEvent = BolusNormalPumpEvent(
+            availableData: Data(hexadecimalString: "01009000900058008a344b1010")!,
+            pumpModel: pumpModel
+            )!
+        
+        // set up multiple non-mutable Bolus event
+        let secondBolusEvent = BolusNormalPumpEvent(
+            availableData: Data(hexadecimalString: "010080008000240009a24a1510")!,
+            pumpModel: pumpModel
+            )!
+        
+        let events = [firstBolusEvent, secondBolusEvent]
+        
+        let result = sut.convertPumpEventToTimestampedEvents(pumpEvents: events, startDate: Date.distantPast, checkDate: datePast2017, mayHaveOutOfOrderEvents: true)
+        
+        XCTAssertEqual(result.events.count, 2)
+    }
+    
+    func testMultipleBolusEventsContainsFirstBolus() {
+        let pumpModel = PumpModel.Model522
+        
+        let firstBolusEvent = BolusNormalPumpEvent(
+            availableData: Data(hexadecimalString: "01009000900058008a344b1010")!,
+            pumpModel: pumpModel
+            )!
+        
+        // set up multiple non-mutable Bolus event
+        let secondBolusEvent = BolusNormalPumpEvent(
+            availableData: Data(hexadecimalString: "010080008000240009a24a1510")!,
+            pumpModel: pumpModel
+            )!
+        
+        let events = [firstBolusEvent, secondBolusEvent]
+        
+        let result = sut.convertPumpEventToTimestampedEvents(pumpEvents: events, startDate: Date.distantPast, checkDate: datePast2017, mayHaveOutOfOrderEvents: true)
+        
+        assertArray(result.events, containsPumpEvent: firstBolusEvent)
+    }
+    
+    func testMultipleBolusEventsContainsSecondBolus() {
+        let pumpModel = PumpModel.Model522
+        
+        let firstBolusEvent = BolusNormalPumpEvent(
+            availableData: Data(hexadecimalString: "01009000900058008a344b1010")!,
+            pumpModel: pumpModel
+            )!
+        
+        // set up multiple non-mutable Bolus event
+        let secondBolusEvent = BolusNormalPumpEvent(
+            availableData: Data(hexadecimalString: "010080008000240009a24a1510")!,
+            pumpModel: pumpModel
+            )!
+        
+        let events = [firstBolusEvent, secondBolusEvent]
+        
+        let result = sut.convertPumpEventToTimestampedEvents(pumpEvents: events, startDate: Date.distantPast, checkDate: datePast2017, mayHaveOutOfOrderEvents: true)
+        
+        assertArray(result.events, containsPumpEvent: secondBolusEvent)
+    }
+    
+    func assertArray(_ timestampedEvents: [TimestampedHistoryEvent], containsPumpEvent pumpEvent: PumpEvent) {
+        XCTAssertNotNil(timestampedEvents.first { $0.pumpEvent.rawData == pumpEvent.rawData})
+    }
+    func assertArray(_ timestampedEvents: [TimestampedHistoryEvent], containsPumpEvents pumpEvents: [PumpEvent]) {
+        pumpEvents.forEach { assertArray(timestampedEvents, containsPumpEvent: $0) }
+    }
+    
+    func testMutableEventWith523() {
+        
+        // device that can have out of order events
+        
+        // Create event like Temp Bolus (priming pump
+        
+        // It should not be counted for IoB (how to measure)
     }
     
     func createBatteryEvent(withDateComponent dateComponents: DateComponents) -> BatteryPumpEvent {
@@ -396,7 +482,7 @@ class PumpOpsSynchronousTests: XCTestCase {
     }
 }
 
-// from http://jernejstrasner.com/2015/07/08/testing-throwable-methods-in-swift-2.html
+// from http://jernejstrasner.com/2015/07/08/testing-throwable-methods-in-swift-2.html - transferred to Swift 3
 func XCTAssertThrows<T>(_ expression: @autoclosure  () throws -> T, _ message: String = "", file: StaticString = #file, line: UInt = #line) {
     do {
         let _ = try expression()
