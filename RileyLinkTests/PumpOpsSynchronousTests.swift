@@ -160,7 +160,7 @@ class PumpOpsSynchronousTests: XCTestCase {
     func testErrorIsntThrown() {
         pumpOpsCommunicationStub.responses = buildResponsesDictionary()
         
-        XCTAssertNoThrow(try _ = sut.getHistoryEvents(since: Date()))
+        assertNoThrow(try _ = sut.getHistoryEvents(since: Date()))
     }
     
     func testUnexpectedResponseThrowsError() {
@@ -172,7 +172,7 @@ class PumpOpsSynchronousTests: XCTestCase {
         pumpOpsCommunicationStub.responses = responseDictionary
         
         // Didn't receive a .pumpAck short reponse so throw an error
-        XCTAssertThrows(try _ = sut.getHistoryEvents(since: Date()))
+        assertThrows(try _ = sut.getHistoryEvents(since: Date()))
     }
     
     func testUnexpectedPumpAckResponseThrowsError() {
@@ -184,7 +184,7 @@ class PumpOpsSynchronousTests: XCTestCase {
         pumpOpsCommunicationStub.responses = responseDictionary
         
         // Didn't receive a .getHistoryPage as 2nd response so throw an error
-        XCTAssertThrows(try _ = sut.getHistoryEvents(since: Date()))
+        assertThrows(try _ = sut.getHistoryEvents(since: Date()))
     }
 
     func testAllEventsReturned() {
@@ -351,13 +351,6 @@ class PumpOpsSynchronousTests: XCTestCase {
         assertArray(result.events, containsPumpEvent: secondBolusEvent)
     }
     
-    func assertArray(_ timestampedEvents: [TimestampedHistoryEvent], containsPumpEvent pumpEvent: PumpEvent) {
-        XCTAssertNotNil(timestampedEvents.first { $0.pumpEvent.rawData == pumpEvent.rawData})
-    }
-    func assertArray(_ timestampedEvents: [TimestampedHistoryEvent], containsPumpEvents pumpEvents: [PumpEvent]) {
-        pumpEvents.forEach { assertArray(timestampedEvents, containsPumpEvent: $0) }
-    }
-    
     func testMutableEventWith523() {
         
         // device that can have out of order events
@@ -482,8 +475,15 @@ class PumpOpsSynchronousTests: XCTestCase {
     }
 }
 
+func assertArray(_ timestampedEvents: [TimestampedHistoryEvent], containsPumpEvent pumpEvent: PumpEvent) {
+    XCTAssertNotNil(timestampedEvents.first { $0.pumpEvent.rawData == pumpEvent.rawData})
+}
+func assertArray(_ timestampedEvents: [TimestampedHistoryEvent], containsPumpEvents pumpEvents: [PumpEvent]) {
+    pumpEvents.forEach { assertArray(timestampedEvents, containsPumpEvent: $0) }
+}
+
 // from http://jernejstrasner.com/2015/07/08/testing-throwable-methods-in-swift-2.html - transferred to Swift 3
-func XCTAssertThrows<T>(_ expression: @autoclosure  () throws -> T, _ message: String = "", file: StaticString = #file, line: UInt = #line) {
+func assertThrows<T>(_ expression: @autoclosure  () throws -> T, _ message: String = "", file: StaticString = #file, line: UInt = #line) {
     do {
         let _ = try expression()
         XCTFail("No error to catch! - \(message)", file: file, line: line)
@@ -491,7 +491,7 @@ func XCTAssertThrows<T>(_ expression: @autoclosure  () throws -> T, _ message: S
     }
 }
 
-func XCTAssertNoThrow<T>(_ expression: @autoclosure  () throws -> T, _ message: String = "", file: StaticString = #file, line: UInt = #line) {
+func assertNoThrow<T>(_ expression: @autoclosure  () throws -> T, _ message: String = "", file: StaticString = #file, line: UInt = #line) {
     do {
         let _ = try expression()
     } catch let error {
