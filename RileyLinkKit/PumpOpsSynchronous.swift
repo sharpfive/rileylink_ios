@@ -393,7 +393,7 @@ class PumpOpsSynchronous {
         let pumpModel = try getPumpModel()
         
         var events = [TimestampedHistoryEvent]()
-                
+        
         pages: for pageNum in 0..<16 {
             NSLog("Fetching page %d", pageNum)
             let pageData: Data
@@ -431,6 +431,17 @@ class PumpOpsSynchronous {
     }
     
     internal func convertPumpEventToTimestampedEvents(pumpEvents: [PumpEvent], startDate: Date, checkDate: Date = Date(), pumpModel: PumpModel) -> (events: [TimestampedHistoryEvent], cancelled: Bool) {
+        
+        // Going to scan backwards in time through events, so event time should be monotonically decreasing.
+        // Exceptions are Square Wave boluses, which can be out of order in the pump history by up
+        // to 8 hours on older pumps, and Normal Boluses, which can be out of order by roughly 4 minutes.
+        let eventTimestampDeltaAllowance: TimeInterval
+        if pumpModel.appendsSquareWaveToHistoryOnStartOfDelivery {
+            eventTimestampDeltaAllowance = TimeInterval(minutes: 10)
+        } else {
+            eventTimestampDeltaAllowance = TimeInterval(hours: 9)
+        }
+
     
         // Start with some time in the future, to account for the condition when the pump's clock is ahead
         // of ours by a small amount.
@@ -458,10 +469,10 @@ class PumpOpsSynchronous {
                         continue
                     }
                     
-                    if date.timeIntervalSince(startDate) < 0 {
+                    if date.timeIntervalSince(startDate) < -eventTimestampDeltaAllowance {
                         NSLog("Found event at (%@) to be before startDate(%@)", date as NSDate, startDate as NSDate);
                         return (events, true)
-                    } else if date.timeIntervalSince(timeCursor) > 0 {
+                    } else if date.timeIntervalSince(timeCursor) > eventTimestampDeltaAllowance {
                         NSLog("Found event (%@) out of order in history. Ending history fetch.", date as NSDate)
                         return (events, true)
                     } else {
