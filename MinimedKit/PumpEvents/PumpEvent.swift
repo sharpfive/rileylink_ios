@@ -11,7 +11,7 @@ import Foundation
 public protocol PumpEvent : DictionaryRepresentable {
     
     init?(availableData: Data, pumpModel: PumpModel)
-    
+        
     var rawData: Data {
         get
     }
