@@ -423,6 +423,9 @@ class PumpOpsSynchronous {
             
             events.append(contentsOf: newEvents.0)
             
+            if newEvents.cancelled {
+                break
+            }
         }
         return (events, pumpModel)
     }

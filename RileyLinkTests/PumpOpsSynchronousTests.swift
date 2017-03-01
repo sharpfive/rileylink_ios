@@ -212,7 +212,7 @@ class PumpOpsSynchronousTests: XCTestCase {
             let historyEvent = eventsTuple.0
             
             // Ends because of out of order
-            XCTAssertEqual(historyEvent.count, 317)
+            XCTAssertEqual(historyEvent.count, 62)
         } catch {
             XCTFail()
         }
@@ -228,7 +228,7 @@ class PumpOpsSynchronousTests: XCTestCase {
             let historyEvent = eventsTuple.0
             
             // Ends because of out of order
-            XCTAssertEqual(historyEvent.count, 285)
+            XCTAssertEqual(historyEvent.count, 62)
         } catch {
             XCTFail()
         }
