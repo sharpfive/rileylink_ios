@@ -419,7 +419,7 @@ class PumpOpsSynchronous {
 
             let page = try HistoryPage(pageData: pageData, pumpModel: pumpModel)
 
-            let newEvents = convertPumpEventToTimestampedEvents(pumpEvents: page.events.reversed(), startDate: startDate, mayHaveOutOfOrderEvents: pumpModel.mayHaveOutOfOrderEvents)
+            let newEvents = convertPumpEventToTimestampedEvents(pumpEvents: page.events.reversed(), startDate: startDate, pumpModel: pumpModel)
             
             events.append(contentsOf: newEvents.0)
             
@@ -427,7 +427,7 @@ class PumpOpsSynchronous {
         return (events, pumpModel)
     }
     
-    internal func convertPumpEventToTimestampedEvents(pumpEvents: [PumpEvent], startDate: Date, checkDate: Date = Date(), mayHaveOutOfOrderEvents: Bool) -> (events: [TimestampedHistoryEvent], cancelled: Bool) {
+    internal func convertPumpEventToTimestampedEvents(pumpEvents: [PumpEvent], startDate: Date, checkDate: Date = Date(), pumpModel: PumpModel) -> (events: [TimestampedHistoryEvent], cancelled: Bool) {
     
         // Start with some time in the future, to account for the condition when the pump's clock is ahead
         // of ours by a small amount.
@@ -451,7 +451,7 @@ class PumpOpsSynchronous {
                     let timestampedEvent = TimestampedHistoryEvent(pumpEvent: event, date: date)
                     
                     // Don't check events that can be out of order
-                    if mayHaveOutOfOrderEvents && timestampedEvent.isMutable(atDate: checkDate) {
+                    if pumpModel.mayHaveOutOfOrderEvents && timestampedEvent.isMutable(atDate: checkDate) {
                         continue
                     }
                     
